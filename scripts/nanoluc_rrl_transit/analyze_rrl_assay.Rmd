@@ -1,0 +1,135 @@
+---
+title: "Meausure elongation kinetics of Alpha-helix vs Beta-sheet mRNAs"
+output: 
+  github_document:
+    toc: 2 
+---
+
+## Goal
+
+- Testing VKFS vs KVFS and SVKF vs SKVF alpha helix/beta sheet inserts. Tested each insert in technical triplicate.  
+
+- We expect that beta-sheet forming peptides strongly decrease translation kinetics. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Load libraries
+
+```{r}
+library(tidyverse)
+library(plotrix)
+library(rasilabRtemplates)
+```
+
+## Read in data
+
+- Note that the kinetic interval times got thrown off slightly. The machine was not quite able to keep up with a 0.5s integration time for 13 wells, over 10 seconds. However, kinetic intervral between each cycle was still ~10s for each cycle. 
+
+```{r}
+rawcounts <- read_csv("../../data/nanoluc_rrl_transit/data.csv") %>% 
+  print()
+```
+
+## Read in annotations
+
+```{r}
+annotations <- read_csv("../../data/nanoluc_rrl_transit/sampleannotations.csv") %>% 
+  print()
+```
+
+## Join annotations to data
+
+```{r}
+join_data <- rawcounts %>% 
+  select(-temp, -cycle) %>% 
+  pivot_longer(!time, names_to = "well", values_to = "count") %>% 
+  left_join(annotations, by = "well") %>% 
+  mutate(replicate = as.factor(replicate)) %>% 
+  print()
+```
+
+```{r}
+plot_data <- join_data %>% 
+  # Caluclate mean values for a given time, with standard error
+  group_by(time, dipeptide) %>% 
+  mutate(count = count / 1e5) %>% 
+  mutate(mean_nluc = mean(count), se_nluc = plotrix::std.error(count)) %>% 
+  ungroup() %>% 
+ #  Select only time from when expressions starts to where signal peaks
+  filter(time >=350 & time <=1200) %>% 
+  print()
+```
+
+## Plot of luminescence values over time
+
+```{r, fig.width=1, fig.height=1}
+label_data <- plot_data %>% 
+  mutate(dipeptide = paste0("4×", dipeptide)) %>% 
+  group_by(dipeptide) %>% 
+  arrange(-time) %>% 
+  slice(1) %>% 
+  ungroup() 
+  
+plot_data %>%
+  ggplot(aes(x = time, y = mean_nluc, color = structure, ymax = mean_nluc + se_nluc, ymin = mean_nluc - se_nluc,
+             label = dipeptide, group = dipeptide)) + 
+  geom_line() +
+  geom_errorbar(width = 0, size = 0.3, alpha=0.3) +
+  # Make labels for the individual inserts
+  geom_text(data = label_data, size=2, color = "black", hjust=1)+
+  # Show labels even though they're off grid
+  coord_cartesian(clip = "off")+
+  scale_colour_manual(values = cbPalette)+
+  labs(x = "Time (s)", y = "Luminescence (RLU)") +
+  scale_y_continuous(breaks = scales::pretty_breaks(n=4))+
+  # scale_x_continuous(breaks = scales::pretty_breaks(n=10), limits = c(350, 1375))+
+  guides(color = F)
+
+# ggsave("svkf_elongation_kinetics.pdf") 
+```
+
+## Calculate transit time
+
+```{r, fig.width=1, fig.height=1}
+plot_data <- join_data %>% 
+  mutate(fit_points = case_when(
+    dipeptide %in% c("VKFS", "SVKF") & time > 900 & time < 1200 ~ T,
+    dipeptide %in% c("KVFS", "SKVF") & time > 600 & time < 900 ~ T,
+    T ~ F
+  )) %>% 
+  filter(fit_points) %>% 
+  arrange(replicate, dipeptide) %>% 
+  group_by(dipeptide, structure, replicate) %>% 
+  nest() %>%
+  mutate(fit = map(data, function(df) lm(formula = time ~ count, data=df))) %>%
+  mutate(fit = map(fit, broom::tidy)) %>%
+  unnest(fit) %>% 
+  ungroup() %>% 
+  select(structure, dipeptide, replicate, term, estimate) %>% 
+  pivot_wider(names_from = "term", values_from = "estimate") %>%
+  janitor::clean_names() %>% 
+  arrange(dipeptide) %>% 
+  group_by(dipeptide, structure) %>%
+  summarize(mean_time = mean(intercept), se_time = plotrix::std.error(intercept)) %>%
+  ungroup() %>% 
+  mutate(dipeptide = fct_rev(as.factor(paste0("4×", dipeptide))))
+
+knitr::kable(plot_data)
+
+plot_data %>% 
+  ggplot(aes(y = dipeptide, x = mean_time,  color = structure,
+             xmin = mean_time - se_time, xmax = mean_time + se_time)) +
+  geom_point(size = 0.5) +
+  geom_errorbar(width=0.5) +
+  scale_x_continuous(breaks = c(550, 650, 750)) +
+  scale_color_manual(values = cbPalette) +
+  labs(x = "Transit time (s)", y = "") +
+  theme(axis.ticks.y = element_blank(), 
+        panel.grid.major.y = element_line(),
+        axis.line.y = element_blank(),
+        legend.position = "none") +
+  NULL
+# ggsave("svkf_transit_time.pdf") 
+```

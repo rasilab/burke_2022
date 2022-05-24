@@ -1,0 +1,14 @@
+well,mrna_id,dipeptide,structure,replicate
+A14,129m8,VKFS,Beta-Sheet,1
+C14,129m9,KVFS,Alpha-Helix,1
+E14,129m10,SVKF,Beta-Sheet,1
+G14,129m11,SKVF,Alpha-Helix,1
+I14,129m8,VKFS,Beta-Sheet,2
+K14,129m9,KVFS,Alpha-Helix,2
+M14,129m10,SVKF,Beta-Sheet,2
+O14,129m11,SKVF,Alpha-Helix,2
+A16,129m8,VKFS,Beta-Sheet,3
+C16,129m9,KVFS,Alpha-Helix,3
+E16,129m10,SVKF,Beta-Sheet,3
+G16,129m11,SKVF,Alpha-Helix,3
+I16,NA,No mRNA,None,1
