@@ -1,0 +1,105 @@
+---
+title: "Plot Circular Dichroism Results for SVKF and SKVF peptides"
+author: "`r Sys.info()[['user']]`"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  github_document:
+    toc: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Import libraries and analysis specific parameters
+
+```{r}
+# standard analysis and plotting functions, includes dplyr, ggplot2 
+library(tidyverse)
+# loads lab default ggplot2 theme and provides color-blind friendly palette
+library(rasilabRtemplates)
+
+
+ss_names = c("alpha" = "α-helix", "beta" = "β-strand", "coil" = "random coil")
+```
+
+# Read in CD data
+
+```{r}
+cd_data <- read_csv("../data/all_data.csv") %>% 
+  janitor::clean_names() %>% 
+  rename(dich = cm2_dmol_1) %>% 
+  print()
+```
+
+
+# Read in annotations
+
+```{r}
+annotations <- read_csv("../data/sampleannotations.csv") %>% print()
+```
+
+# Write files for SESCA BAYES analysis
+```{r}
+cd_data %>% 
+  filter(str_detect(sample, "Alpha|Beta")) %>% 
+  select(-voltage) %>% 
+  group_by(sample) %>% 
+  nest() %>% 
+  mutate(temp = map2(data, sample, function(df, sample) write_tsv(df, paste0("../data/spectrum_files/", sample, ".cd.txt"), col_names = F)))
+```
+
+# Join data with annotations
+
+```{r}
+data <- cd_data %>% 
+     left_join(annotations, by = 'sample') %>% 
+     print() 
+```
+
+# Plot CD spectra for each TFE concentration fluorescence 
+
+```{r, fig.width=2, fig.height=1}
+data %>%
+  filter(!is.na(insert)) %>% 
+  mutate(percent_tfe = as.factor(percent_tfe)) %>% 
+  mutate(insert = paste0("4×", insert)) %>% 
+  ggplot(aes(x = wavelength, y = dich, linetype = percent_tfe, color = insert)) +
+  facet_wrap(~ fct_rev(insert), ncol = 3, scales = "fixed") +
+  geom_line(aes(group = percent_tfe)) +
+  scale_color_manual(values = cbPalette) +
+  guides(color = F) +
+  theme(legend.key.height = unit(0.5, "line")) +
+  labs(x = "Wavelength (nm)", y = "Circular dichroism\n(cm2dmol1)", linetype = "TFE (%)")
+  NULL
+  
+ggsave("../figures/cd_spectra.pdf")
+```
+# Plot SESCA inferred values
+```{r}
+sesca_data <- read_csv("/fh/fast/subramaniam_a/user/rasi/analysis/bioinformatics/structure/sesca/data/sesca_inferred_ss.csv") %>% 
+  left_join(annotations, by = "sample") %>% 
+  print()
+```
+
+# Plot SESCA predicted secondary structure for each TFE concentration fluorescence 
+
+```{r, fig.width=2, fig.height=1}
+sesca_data %>%
+  pivot_longer(c("alpha", "beta", "coil"), names_to = "ss", values_to = "sesca") %>%
+  mutate(ss = fct_relevel(ss_names[ss], "α-helix", "β-strand", "random coil")) %>% 
+  mutate(percent_tfe = as.factor(percent_tfe)) %>% 
+  mutate(insert = paste0("4×", insert)) %>% 
+  ggplot(aes(x = percent_tfe, y = sesca * 100, fill = ss)) +
+  facet_wrap(~ fct_rev(insert), ncol = 3, scales = "fixed") +
+  scale_fill_manual(values = cbPalette[c(3,2,1)]) +
+  geom_col(width = 0.8) +
+  # geom_line(aes(group = percent_tfe)) +
+  # scale_color_manual(values = cbPalette) +
+  # guides(color = F) +
+  theme(legend.key.height = unit(0.5, "line"), legend.key.width = unit(0.5, "line")) +
+  labs(fill = "", y = "SS content (%)", x = "TFE (%)")
+  NULL
+  
+ggsave("../figures/sesca_ss_content.pdf")
+```
