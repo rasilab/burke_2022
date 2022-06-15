@@ -8,7 +8,7 @@ import re
 import pandas as pd
 
 
-spectrum_folder = '../data/spectrum_files/'
+spectrum_folder = '../../data/circular_dichroism/spectrum_files/'
 
 for input_file in os.listdir(spectrum_folder):
     input_path = os.path.join(spectrum_folder, input_file)
@@ -23,7 +23,7 @@ for input_file in os.listdir(spectrum_folder):
     print(input_file, " processed.")
 
 
-output_folder = '../data/sesca_deconv/'
+output_folder = '../../data/circular_dichroism/sesca_deconv/'
 
 table = dict()
 
@@ -44,7 +44,7 @@ table = (
     .sort_values(by = 'sample')
 )
 
-table.to_csv('../data/sesca_inferred_ss.csv', index=False)
+table.to_csv('../../data/circular_dichroism/sesca_inferred_ss.csv', index=False)
 
 table
 

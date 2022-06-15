@@ -26,7 +26,7 @@ ss_names = c("alpha" = "α-helix", "beta" = "β-strand", "coil" = "random coil")
 # Read in CD data
 
 ```{r}
-cd_data <- read_csv("../data/all_data.csv") %>% 
+cd_data <- read_csv("../../data/circular_dichroism/all_data.csv") %>% 
   janitor::clean_names() %>% 
   rename(dich = cm2_dmol_1) %>% 
   print()
@@ -36,7 +36,7 @@ cd_data <- read_csv("../data/all_data.csv") %>%
 # Read in annotations
 
 ```{r}
-annotations <- read_csv("../data/sampleannotations.csv") %>% print()
+annotations <- read_csv("../../data/circular_dichroism/sampleannotations.csv") %>% print()
 ```
 
 # Write files for SESCA BAYES analysis
@@ -46,7 +46,7 @@ cd_data %>%
   select(-voltage) %>% 
   group_by(sample) %>% 
   nest() %>% 
-  mutate(temp = map2(data, sample, function(df, sample) write_tsv(df, paste0("../data/spectrum_files/", sample, ".cd.txt"), col_names = F)))
+  mutate(temp = map2(data, sample, function(df, sample) write_tsv(df, paste0("../../data/circular_dichroism/spectrum_files/", sample, ".cd.txt"), col_names = F)))
 ```
 
 # Join data with annotations
@@ -73,11 +73,11 @@ data %>%
   labs(x = "Wavelength (nm)", y = "Circular dichroism\n(cm2dmol1)", linetype = "TFE (%)")
   NULL
   
-ggsave("../figures/cd_spectra.pdf")
+ggsave("cd_spectra.pdf")
 ```
 # Plot SESCA inferred values
 ```{r}
-sesca_data <- read_csv("/fh/fast/subramaniam_a/user/rasi/analysis/bioinformatics/structure/sesca/data/sesca_inferred_ss.csv") %>% 
+sesca_data <- read_csv("../../data/circular_dichroism/sesca_inferred_ss.csv") %>% 
   left_join(annotations, by = "sample") %>% 
   print()
 ```
@@ -101,5 +101,5 @@ sesca_data %>%
   labs(fill = "", y = "SS content (%)", x = "TFE (%)")
   NULL
   
-ggsave("../figures/sesca_ss_content.pdf")
+ggsave("sesca_ss_content.pdf")
 ```

@@ -1,0 +1,8 @@
+order,sample,insert,secondary,percent_tfe
+1,Alpha_0,SKVF,alpha,0
+2,Alpha_20,SKVF,alpha,20
+3,Alpha_40,SKVF,alpha,40
+4,Beta_0,SVKF,beta,0
+5,Beta_20,SVKF,beta,20
+6,Beta_40,SVKF,beta,40
+7,Buffer,NA,NA,0
