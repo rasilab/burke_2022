@@ -1,0 +1,48 @@
+{
+  "image": "ghcr.io/rasilab/project_repo:latest",
+  /* Uncomment this for re-building Docker image locally */
+  // "build": {
+  //   "dockerfile": "Dockerfile",
+  //   "context": ".."
+  // },
+
+  /* 
+  Uncomment the three lines below  with the "mounts" spec for mounting SSHFS-mounted rhino lab folder inside your container
+
+  To do sshfs mount, first uncomment the line 'user_allow_other' in /etc/fuse.conf
+
+  Then run:
+  sshfs -o allow_other rhino03://fh/fast/subramaniam_a /fh/fast/subramaniam_a/
+
+  */
+
+  // "mounts":[
+  //   "source=/fh/fast/subramaniam_a,target=/fh/fast/subramaniam_a,type=bind,consistency=cached",
+  // ],
+
+  "extensions": [
+    /* run pandoc automatically upon saving */
+    "pucelle.run-on-save",
+    /* run python code */
+    "ms-python.python",
+    /* run Jupyter notebooks */
+    "ms-toolsai.jupyter",
+    /* reveal.js presentations */
+    "evilz.vscode-reveal",
+  ],
+  "settings": {
+    "runOnSave.shell": "/bin/bash",
+    "runOnSave.commands": [
+      {
+        "match": "maintext.md",
+        "runIn": "backend",
+        "command": "cd ${fileDirname}; pandoc ${fileBasename} --template template.tex --filter=pandoc-svg.py --citeproc --pdf-engine=xelatex -o ${fileBasenameNoExtension}.pdf"
+      },
+      {
+        "match": "cover_letter.md",
+        "runIn": "backend",
+        "command": "cd ${fileDirname};pandoc ${fileBasename} --template template.tex --pdf-engine=xelatex -o ${fileBasenameNoExtension}.pdf"
+      },
+    ],
+  }
+}
