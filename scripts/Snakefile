@@ -1,0 +1,31 @@
+import pandas as pd
+
+sra_annotations = pd.read_table("../annotations/sra_annotations.tsv")[:1]
+print(sra_annotations)
+
+rule all:
+    input:
+        fastq = [f'../data/fastq/{srx}.fastq' for srx in sra_annotations['accession']]
+
+
+rule get_fastq:
+  """Download fastq from SRA"""
+  input:
+  output: '../data/fastq/{srr}.fastq'
+  params:
+    directory = '../data/fastq'
+  threads : 8
+  container: 'docker://ncbi/sra-tools:3.0.0'
+  shell:
+    """
+    # prefetch {wildcards.srr}
+    set +e # continue if there is an error code
+    fastq-dump --sra-id {wildcards.srr} --threads {threads} --outdir {params.directory}
+    exitcode=$?
+    if [ $exitcode -eq 1 ]
+    then
+      exit 1
+    else
+      exit 0
+    fi
+    """
