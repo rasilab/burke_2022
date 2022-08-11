@@ -15,7 +15,8 @@ rule get_fastq:
   params:
     directory = '../data/fastq'
   threads : 8
-  container: 'docker://ncbi/sra-tools:3.0.0'
+  container: 'docker://ghcr.io/rasilab/burke_2022:latest'
+  conda: sra-tools
   shell:
     """
     # prefetch {wildcards.srr}
