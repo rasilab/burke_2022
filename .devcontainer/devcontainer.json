@@ -1,5 +1,5 @@
 {
-  "image": "ghcr.io/rasilab/burke_2022:0.1.0",
+  "image": "ghcr.io/rasilab/burke_2022:latest",
 
   "extensions": [
     /* run python code */

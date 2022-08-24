@@ -25,3 +25,32 @@ Rather than individual amino acids, specific combinations of bulky and positivel
 Remarkably, dipeptide sequences that form extended β strands *in silico* and *in vitro* drive ribosome stalling and mRNA instability *in vivo*.
 The resulting nascent peptide code underlies ribosome stalling and mRNA-destabilizing effects of hundreds of endogenous peptide sequences in the human proteome.
 Our work suggests an intrinsic role for the ribosome as a selectivity filter against the synthesis of bulky and aggregation-prone peptides.
+
+## Software Installation
+
+- Get the docker image from this repo:
+
+```
+docker pull ghcr.io/rasilab/burke_2022:latest
+```
+
+- Open this repo inside VScode remote development container. It should automatically pick up the above image based on [](./.devcontainer/devcontainer.json).
+
+- Run the analysis workflow from the command line inside the VScode  container:
+
+```
+cd scripts/
+snakemake -np # dry run
+snakemake -p --cores=all --use-conda
+```
+
+- To run this on a cluster with singularity containers, do:
+
+```
+grabnode # for fred hutch only, get max 36 nodes
+cd scripts
+module load singularity # for fred hutch cluster
+singularity pull docker://ghcr.io/rasilab/burke_2022:latest
+conda activate snakamake # this is a minimal conda env that has snakemake-minimal and pandas for invoking snakefile
+snakemake -p --cores=all -use-conda --use-singularity
+```

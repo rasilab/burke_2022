@@ -21,7 +21,7 @@ rule get_fastq:
   shell:
     """
     set +e # continue if there is an error code
-    fastq-dump --outdir {params.directory} --accession {srr}
+    fastq-dump --outdir {params.directory} {wildcards.srr}
     exitcode=$?
     if [ $exitcode -eq 1 ]
     then
