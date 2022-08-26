@@ -6,4 +6,4 @@ snakemake \
     --use-singularity \
     --singularity-args "--bind /fh:/fh" \
     --cores=all \
-    -p
+    -p $@
