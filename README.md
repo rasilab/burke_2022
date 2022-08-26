@@ -52,6 +52,8 @@ cd scripts
 module load singularity # for fred hutch cluster
 singularity pull docker://ghcr.io/rasilab/burke_2022:latest
 conda activate snakemake # this is a minimal conda env that has snakemake-minimal and pandas for invoking snakefile
+# for interactive singularity debugging on cluster, run following command
+# singularity exec -B /fh:/fh burke_2022_latest.sif /bin/bash
 sh submit_local.sh # adjust this script to mount the parent directory
 # sh submit_cluster.sh # uses SLURM to run the containers in parallel, adjust script to mount parent directory
 ```
