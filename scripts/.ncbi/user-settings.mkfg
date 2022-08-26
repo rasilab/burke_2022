@@ -1,0 +1,12 @@
+## auto-generated configuration file - DO NOT EDIT ##
+
+/LIBS/GUID = "947ad06d-f5e8-4d97-b2d5-da929e809d0b"
+/config/default = "true"
+/repository/user/ad/public/apps/file/volumes/flatAd = "."
+/repository/user/ad/public/apps/refseq/volumes/refseqAd = "."
+/repository/user/ad/public/apps/sra/volumes/sraAd = "."
+/repository/user/ad/public/apps/sraPileup/volumes/ad = "."
+/repository/user/ad/public/apps/sraRealign/volumes/ad = "."
+/repository/user/ad/public/apps/wgs/volumes/wgsAd = "."
+/repository/user/ad/public/root = "."
+/tools/prefetch/download_to_cache = "false"

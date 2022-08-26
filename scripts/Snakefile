@@ -1,7 +1,7 @@
 import pandas as pd
 import itertools as it
 
-sra_annotations = pd.read_table("../annotations/sra_annotations.tsv")[:1]
+sra_annotations = pd.read_table("../annotations/sra_annotations.tsv")
 print(sra_annotations)
 
 rule all:
@@ -15,13 +15,14 @@ rule get_fastq:
   output: '../data/fastq/{srr}.fastq'
   params:
     directory = '../data/fastq/'
-  threads : 8
-  container: 'docker://ghcr.io/rasilab/burke_2022:latest'
   conda: "sratools"
+  threads : 8
+  container: 'burke_2022_latest.sif'
+  # conda: "sratools"
   shell:
     """
     set +e # continue if there is an error code
-    fastq-dump --outdir {params.directory} {wildcards.srr}
+    fasterq-dump --concatenate-reads --outdir {params.directory} --threads {threads} {wildcards.srr}
     exitcode=$?
     if [ $exitcode -eq 1 ]
     then
