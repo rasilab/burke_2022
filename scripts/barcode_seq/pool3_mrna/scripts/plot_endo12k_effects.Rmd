@@ -1,0 +1,883 @@
+---
+title: "Plot effects of endo12K inserts on mRNA levels"
+author: "`r Sys.info()[['user']]`"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  github_document:
+    toc: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=F, message=F)
+```
+
+# Load libraries and define analysis-specific parameters
+```{r}
+library(rsample)
+library(tidyverse)
+library(rasilabRtemplates)
+
+insert_reads_cutoff <- 200 # The insert should get at least 200 reads across gRNA or mRNA
+n_barcodes_cutoff <- 6 # The insert should have at least 6 barcodes across gRNA and mRNA after above cutoff
+```
+
+# Read back barcode counts 
+
+This is calculated in [plot_alignment_statistics.md](plot_alignment_statistics.md).
+
+```{r}
+barcode_counts <- read_tsv("../tables/sample_insert_barcode_counts.tsv.gz") %>% 
+  print()
+```
+
+# Read insert annotations 
+```{r}
+insert_annotations <- read_tsv("../annotations/insert_annotations/endo12k.tsv.gz") %>% 
+  print()
+```
+
+# Plot stall strength of human VK-type motifs
+
+```{r}
+insert_annotations %>% 
+  filter(motif_source == "human_vk_motif_10", mutant_type == "wildtype") %>% 
+  print()
+```
+
+# Distinct groups of motifs in our experiment
+
+```{r}
+insert_annotations %>% 
+  distinct(motif_source)
+```
+
+# Combine barcode counts and insert annotations
+
+Filter for inserts with at least 6 barcodes total and 200 reads total
+
+```{r}
+lfc <- barcode_counts %>% 
+  group_by(insert_num, library_type) %>%
+  summarize(count = sum(barcode_count), n_barcodes = dplyr::n()) %>%
+  ungroup() %>% 
+  inner_join(insert_annotations, by = "insert_num") %>%
+  pivot_wider(names_from = library_type, values_from = c("count", "n_barcodes")) %>%
+  filter(count_grna + count_mrna >= insert_reads_cutoff) %>%
+  filter(n_barcodes_grna + n_barcodes_mrna >= n_barcodes_cutoff) %>%
+  mutate(lfc = log2(count_mrna) - log2(count_grna)) %>%
+  mutate(lfc = lfc - median(lfc)) %>%
+  arrange(lfc) %>%
+  select(motif_source, gene_name, motif_type, mutant_type, strength, lfc, aa, everything(), -motif_num, -group, -insert_num) %>% 
+  write_tsv("../tables/insert_lfc.tsv") %>% 
+  print()
+```
+
+# What is the median number of barcodes per insert
+
+```{r}
+lfc %>% 
+  summarize(median_grna_barcodes = median(n_barcodes_grna),
+            median_mrna_barcodes = median(n_barcodes_mrna)
+            )
+```
+
+# Compare LFC for human_VK_10 with han2020_control, both wild-type motifs
+
+The goal here is to compare VK-type motifs of strength >= 10 with control motifs that do not have VK-type motifs. The only such group we included in our experiment is the han2020 control motifs with high ribosome density. These have strength <= 2. There are 122 of them.
+
+```{r, fig.width=1.2, fig.height=1}
+plot_data <- lfc %>% 
+  mutate(type = case_when(
+    (motif_source == "han_2020_motifs" & motif_type == "control" & mutant_type == "wildtype") ~ "< 3",
+    (motif_source == "human_vk_motif_10"  & mutant_type == "wildtype") ~ "> 9",
+    T ~ as.character(NA)
+    )) %>% 
+  filter(!is.na(type)) %>% 
+  filter(!str_detect(aa, "\\*")) %>% 
+  print()
+
+label_data <- plot_data %>% 
+  group_by(type) %>% 
+  summarize(n = paste0("N = ", dplyr::n()))
+  
+plot_data %>% 
+  ggplot(aes(x = fct_rev(type), y = lfc, fill = type)) +
+  scale_fill_manual(values = cbPalette) +
+  scale_y_continuous(breaks = c(-2, 0, 2), limits = c(-3.5, 2.2)) +
+  geom_violin() + 
+  geom_text(aes(x = type, label = n), y = -3.2, data = label_data, size = 2) +
+  labs(y = "mRNA level (log2, a.u.)", x = "Peptide score") +
+  guides(fill = F)
+
+ggsave("../figures/compare_mrna_vk10_han2020_ctrl.pdf")
+```
+
+## Effect size for above plot
+
+```{r, fig.width=3, fig.height=2}
+plot_data %>% 
+  group_by(type) %>% 
+  summarize(n = dplyr::n(), median_lfc = median(lfc)) %>% 
+  knitr::kable()
+```
+
+## P-value for above plot
+
+```{r}
+wilcox.test(lfc ~ type, data=plot_data, alternative = "greater") %>% 
+  broom::tidy() %>% 
+  knitr::kable()
+```
+
+# Histogram of mRNA levels
+
+Skip constructs with stop codons
+```{r, fig.width=4, fig.height=3}
+lfc %>% 
+  filter(!str_detect(aa, "\\*")) %>% 
+  ggplot(aes(x = lfc)) +
+  geom_histogram(bins = 100, fill = NA, color = 'black') +
+  labs(x = "mRNA level (log2, a.u.)", y = "Motif count")
+```
+
+
+# Plot fold-changes in VK-10 motifs upon KnextV or VnextK mutations
+```{r, fig.width=1.5, fig.height=1.2}
+plot_data <- lfc %>% 
+  filter(motif_source == "human_vk_motif_10") %>% 
+  filter(!str_detect(aa, "\\*")) %>% 
+  select(gene_name, mutant_type, strength, lfc) %>% 
+  pivot_wider(names_from = "mutant_type", values_from = "lfc") %>%
+  mutate(VnextK = VnextK - wildtype, KnextV = KnextV - wildtype) %>% 
+  select(gene_name, KnextV) %>% 
+  mutate(KnextV = if_else(KnextV > 2, 2, KnextV)) %>% 
+  mutate(KnextV = if_else(KnextV < -2, -2, KnextV)) %>% 
+  filter(!is.na(KnextV)) %>% 
+  pivot_longer(-gene_name) %>% 
+  print()
+
+plot1 <- plot_data %>%
+  ggplot(aes(x = value, y = name)) +
+  # geom_histogram(fill = "red", color = "NA", alpha = 0.5) +
+  geom_boxplot(width=1, fill = "red", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black")  +
+  theme(axis.line = element_blank(), axis.text = element_blank(), 
+        axis.ticks = element_blank(), axis.title = element_blank()) +
+  scale_x_continuous(labels = c("<-2", -1, 0, 1, ">2"), limits = c(-2, 2)) 
+  # geom_hline(yintercept = 0, linetype = "dashed", color = "grey")
+
+plot2 <- plot_data %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(fill = "red", alpha = 0.5, color = "black", size = 0.25) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black")  +
+  # theme(axis.line.y = element_blank(), axis.text.y = element_blank(),
+  #       axis.ticks.y = element_blank(), axis.title.y = element_blank()) +
+  labs(x = "mRNA fold-change, mutant / wild-type, log2", y = "Number of peptides")  +
+  scale_x_continuous(labels = c("<-2", -1, 0, 1, ">2"), limits = c(-2, 2)) 
+
+cowplot::plot_grid(plot1, plot2, ncol = 1, align = "v", rel_heights = c(1,4))
+
+ggsave("../figures/mrna_fold_change_knextv_mutations.pdf")
+```
+
+## P-value for above plot
+
+```{r}
+wilcox.test(plot_data$value, mu = 0)
+```
+## Median of above plot
+```{r}
+plot_data %>% 
+  summarize(n_positive = sum(value > 0), median = median(value))
+```
+
+# Calculate bootstrap confidence intervals for LFC of human VK 10 motifs
+
+```{r}
+# Use for calculating bootstrap mRNA level as ratio of mRNA to gRNA counts
+calc_lfc_bootstrap <- function(data, indices) {
+  d <- data[indices,]
+  log2(sum(d$mrna)) - log2(sum(d$grna))
+}
+
+lfc_bootstrap <- barcode_counts %>% 
+  select(insert_num, barcode_num, library_type, barcode_count) %>% 
+  pivot_wider(names_from = "library_type", values_from = "barcode_count") %>% 
+  drop_na() %>% 
+  group_by(insert_num) %>%
+  nest() %>% 
+  ungroup() %>% 
+  inner_join(insert_annotations, by = "insert_num") %>%
+  filter(motif_source == "human_vk_motif_10" | gene_name == "SSRP1") %>% 
+  filter(!str_detect(aa, "\\*")) %>% 
+  mutate(lfc = map(data, function(df) boot::boot(data=df, statistic=calc_lfc_bootstrap, R=1000)$t)) %>%
+  select(-data) %>% 
+  select(gene_name, mutant_type, lfc) %>%
+  print()
+```
+
+```{r}
+lfc_iqr <- lfc_bootstrap %>% 
+  mutate(lfc_75 = map_dbl(lfc, function(x) quantile(x, 0.95))) %>%
+  mutate(lfc_25 = map_dbl(lfc, function(x) quantile(x, 0.05))) %>%
+  mutate(lfc_50 = map_dbl(lfc, function(x) quantile(x, 0.5))) %>% 
+  mutate(lfc_mean = map_dbl(lfc, mean)) %>%
+  mutate(lfc_sd = map_dbl(lfc, sd)) %>%
+  select(-lfc) %>% 
+  print()
+```
+
+# Calculate bootstrap P-values for significant change upon KnextV and VnextK mutations
+
+```{r}
+vkmutants_pvals <- lfc_bootstrap %>% 
+  pivot_wider(names_from = "mutant_type", values_from = "lfc") %>% 
+  drop_na() %>% 
+  mutate(KnextV_pval_greater = map2_dbl(KnextV, wildtype,
+                                        function(x, y) wilcox.test(x, y, alternative = "greater")$p.value)) %>%
+  mutate(KnextV_pval_less = map2_dbl(KnextV, wildtype,
+                                        function(x, y) wilcox.test(x, y, alternative = "less")$p.value)) %>%
+  mutate(VnextK_pval_greater = map2_dbl(VnextK, wildtype,
+                                        function(x, y) wilcox.test(x, y, alternative = "greater")$p.value)) %>%
+  mutate(VnextK_pval_less = map2_dbl(VnextK, wildtype,
+                                        function(x, y) wilcox.test(x, y, alternative = "less")$p.value)) %>%
+  # Benjamini-Hochberg FDR correction
+  mutate(KnextV_pval_greater = p.adjust(KnextV_pval_greater, method = "fdr")) %>%
+  mutate(KnextV_pval_less = p.adjust(KnextV_pval_less, method = "fdr")) %>%
+  mutate(VnextK_pval_greater = p.adjust(VnextK_pval_greater, method = "fdr")) %>%
+  mutate(VnextK_pval_less = p.adjust(VnextK_pval_less, method = "fdr")) %>%
+  select(gene_name, KnextV_pval_greater, KnextV_pval_less, VnextK_pval_greater, VnextK_pval_less) %>%
+  print()
+```
+
+```{r}
+vkmutants_pvals %>% 
+  filter(gene_name == "VAPA") %>% 
+  arrange(KnextV_pval_greater)
+```
+
+
+# How many human VK10 peptides have higher or lower mRNA level upon KnextV or VnextK  mutations?
+
+```{r}
+vkmutants_pvals %>% 
+  summarize(VnextK_n_greater = sum(VnextK_pval_greater < 0.05), 
+            VnextK_n_less = sum(VnextK_pval_less < 0.05),
+            KnextV_n_greater = sum(KnextV_pval_greater < 0.05), 
+            KnextV_n_less = sum(KnextV_pval_less < 0.05),
+            ) %>% 
+  knitr::kable()
+```
+
+
+# Known 8x dicodon stall motifs are destabilizing
+
+```{r}
+known_stalls <- lfc %>% 
+  filter(motif_source == "control_motifs") %>% 
+  select(aa, lfc, seq, starts_with("count"), starts_with("n_barcodes")) %>% 
+  mutate(lfc = round(lfc, 2)) %>% 
+  print()
+
+knitr::kable(known_stalls)
+```
+
+# Many RG4 quadruplexes are highly destabilizing
+
+```{r, fig.width=4, fig.height=2}
+rg4_lfc <- lfc %>% 
+  filter(!str_detect(aa, "\\*")) %>%
+  mutate(rg4 = if_else(motif_source == "rg4", "rg4", "others")) 
+
+rg4_lfc %>% 
+  group_by(rg4) %>% 
+  mutate(rg4 = str_c(rg4, ", N = ", dplyr::n())) %>% 
+  ggplot(aes(lfc, after_stat(density), color = rg4)) +
+  scale_color_manual(values = cbPalette) +
+  geom_freqpoly() +
+  labs(x = "mRNA level (Log2, a.u.)", y = "Normalized motif count", color = "")
+```
+## Interesting RG4 quadruplexes
+
+- VEGFA is a tumor promoting gene with lot of known G-quadruplexes in its vicinity. [Zhang 2013](https://pubmed.ncbi.nlm.nih.gov/24005038/). But it seems to be present in an alternate isoform.
+- FMR1 G-quadruplex is well studied. See [Schaeffer 2001](https://pubmed.ncbi.nlm.nih.gov/11532944/) and [Varshney 2020](https://www.nature.com/articles/s41580-020-0236-x).
+
+```{r}
+rg4_lfc %>% 
+  filter(rg4 == "rg4") %>% 
+  select(-motif_type, -mutant_type, -strength)
+```
+
+
+# Effect of Uniprot-annotated stranded motifs that contain stalls
+
+- Look at destabilizing RAB12 case study further below. Has a RG stalling motif right at the turn.
+- ITGB1BP1 has an abnormally long β-strand of 14 amino acids. Destabiliziing as well. Suitable for illustration. Has lot of aromatics.
+- EFHC2 has an abnormally long β-strand of 14 amino acids. Destabilizing as well. Suitable for illustration. Has lot of aromatics.
+- RPGRIP1L has a 11 amino acid β-strand but the structure is truncated after this. Destabilzing. Maybe suitable for illustration.
+- SYK also has a MKKV sequence at the turn between the strands
+- SSRP1 is interesting because it is destabilizing, stranded, rescued by KnextV and also has high ribosome density in Han 2020.
+
+```{r}
+stranded_stalls <- read_tsv("/fh/fast/subramaniam_a/user/rasi/analysis/structures/others/uniprot/tables/2021-04-07_strand-dipeptide-motifs-in-12k-library.tsv") %>% 
+  print()
+```
+
+```{r}
+lfc %>% 
+  inner_join(select(stranded_stalls, strand_score, stall_score, gene_name), by = c("gene_name")) %>%
+  # filter(motif_source == "weber_2020_motifs", mutant_type == "wildtype") %>% 
+  # filter(motif_source == "human_vk_motif_10", mutant_type == "wildtype") %>% 
+  # filter(mutant_type == "wildtype") %>%
+  select(strand_score, stall_score, everything()) %>%
+  print()
+```
+
+# Look at all Uniprot entries irrespective of structure
+```{r}
+uniprot_12k <- read_tsv("/fh/fast/subramaniam_a/user/rasi/analysis/structures/others/uniprot/tables/2021-08-03_secondary-structure-motifs-in-12k-library.tsv") %>% 
+  select(gene_name, helix, strand, turn) %>% 
+  inner_join(lfc, by = c("gene_name")) %>%
+  # filter(strand > 8, lfc < -0.75) %>%
+  # filter(mutant_type == "wildtype") %>%
+  arrange(-strand,lfc) %>%
+  filter(gene_name == "ARRDC3") %>%
+  print()
+```
+
+# Length of Uniprot secondary structures
+
+See references in 51, 52 in https://www.pnas.org/content/98/21/12015 for comparison.
+```{r}
+uniprot_lengths <- read_csv("/fh/fast/subramaniam_a/user/rasi/analysis/structures/others/uniprot/tables/2021-08-03-uniprot-ss-lengths.csv") %>% 
+  arrange(length) %>% 
+  print()
+```
+
+
+# Read in S4Pred propensities
+
+```{r}
+s4pred_detailed <- read_tsv("/fh/fast/subramaniam_a/user/rasi/analysis/bioinformatics/structure/s4pred/tables/20210503_endo12k_ss_prediction.tsv.gz") %>% 
+  print()
+```
+
+```{r}
+s4pred <- read_tsv("/fh/fast/subramaniam_a/user/rasi/analysis/bioinformatics/structure/s4pred/tables/20210503_endo12k_avg_ss_prediction.tsv.gz") %>% 
+  print()
+```
+
+
+# Specific candidate highlight
+
+## Plot LFC_IQR for candidates of interest
+
+```{r, fig.width=0.7, fig.height=2}
+goi <- c("RAB12", "ITGB1BP1", "EFHC2", "SSRP1")
+
+plot_data <- lfc_iqr %>% 
+  filter(mutant_type %in% c("wildtype", "KnextV")) %>% 
+  filter(gene_name %in% goi) %>% 
+  mutate(mutant_type = fct_rev(if_else(mutant_type == "KnextV", "mut", "wt"))) %>%
+  group_by(gene_name) %>%
+  mutate(order = lfc_mean[mutant_type == "wt"]) %>%
+  mutate(yloc = seq(n(), 1, -1)) %>%
+  ungroup() %>%
+  mutate(gene_name = fct_rev(fct_reorder(gene_name, order))) %>% 
+  mutate(yloc = yloc + 3*group_indices(., gene_name)) %>%
+  print()
+
+gene_order <- plot_data %>% 
+  select(gene_name, mutant_type, yloc)
+
+plot_data %>% 
+  ggplot(aes(x = lfc_mean, xmin = lfc_mean - lfc_sd, xmax = lfc_mean + lfc_sd, y = gene_name, color = mutant_type)) +
+  geom_errorbar(width = 0.3) +
+  geom_point() +
+  scale_color_manual(values = cbPalette[c(2,1)]) +
+  theme(axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        legend.position = "top") +
+  scale_x_continuous(breaks = seq(-2,0)) +
+  labs(x = "mRNA level\n(log2, a.u.)", color = "", y = "")
+
+ggsave("../figures/lfc_strand_examples.pdf")
+```
+## Plot S4Pred for genes of interest
+
+```{r, fig.width=1.2, fig.height=1.9}
+plot_data <- s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+  filter(mutant_type %in% c("wildtype", "KnextV")) %>%
+  filter(gene_name %in% goi) %>% 
+  mutate(mutant_type = fct_rev(if_else(mutant_type == "KnextV", "mut", "wt"))) %>%
+  left_join(gene_order, by = c("gene_name", "mutant_type")) %>% 
+  filter(ss == "strand") %>% 
+  print()
+
+plot_data %>%
+  ggplot(aes(x = loc, y = yloc, fill = p)) +
+  geom_tile(height = 0.7) +
+  scale_fill_gradient(high = "#333333", low = "#dddddd") +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.line = element_blank(),
+        legend.position = "top") +
+  guides(fill = guide_colorbar(barheight = unit(0.2, "cm"), barwidth = unit(1.0, "cm"), ticks = F)) +
+  scale_x_continuous(breaks = c(1,20)) +
+  labs(x = "Position along\npeptide (aa)", fill = "", y = "")
+ggsave("../figures/s4pred_strand_examples.pdf")
+```
+## Show gene sequences
+```{r, fig.width=1.5, fig.height=1.15}
+plot_data <- lfc %>% 
+  filter(mutant_type %in% c("wildtype", "KnextV")) %>%
+  filter(gene_name %in% goi) %>% 
+  mutate(mutant_type = fct_rev(if_else(mutant_type == "KnextV", "mut", "wt"))) %>%
+  right_join(gene_order, by = c("gene_name", "mutant_type")) %>% 
+  arrange(-yloc)
+
+plot_data %>% 
+  ggplot(aes(label = aa, y = yloc)) +
+  geom_text(x = 0.5, size = 2, family = "Courier") +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_blank(),
+        legend.position = "top") 
+
+ggsave("../figures/sequence_strand_examples.pdf")
+```
+
+## USPL1 seems to destabilize both in human and mouse case
+
+```{r}
+lfc %>% 
+  filter(tolower(gene_name) == "uspl1") %>%
+  print()
+```
+## ADORA3 is highly destabilizing
+
+- Adenosine receptor in heart
+- It also has a high β-strand score
+- Both stability and strand score are negated by VK/KV mutations.
+
+```{r}
+lfc %>% 
+  filter(gene_name == "ADORA3") %>% 
+  left_join(s4pred %>% select(strand, gene_name, mutant_type), by = c("gene_name", "mutant_type")) %>% 
+  select(gene_name, strand, lfc, strength, mutant_type, aa, matches("^count|n_")) %>% 
+  rename_with(~gsub("n_barcodes", "nb", .x)) %>% 
+  rename_with(~gsub("count", "c", .x)) %>% 
+  mutate(across(c("strand","lfc"), ~ round(.x, 2))) %>% 
+  knitr::kable()
+```
+
+S4Pred score for each aa in ADORA3
+
+# ADORA3 has opposite prediction in Alphafold. The β-stranded region is predicted to be a short turn: https://alphafold.ebi.ac.uk/entry/P0DMS8.
+
+```{r, fig.width=6, fig.height=2}
+s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+  filter(gene_name == "VAPA") %>%
+  ggplot(aes(x = loc, y = p, color = ss)) +
+  facet_wrap(~mutant_type) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = cbPalette) +
+  NULL
+  # print()
+```
+
+## RAB12 is highly destabilizing
+
+- GTPase involved in membrane trafficking
+- It also has a high β-strand score
+- It is also annotated as an extended β-strand in Uniprot.
+- Both stability and strand score are negated by VK/KV mutations.
+- Why is special about RAB12 that makes this motif destabilizing? It has a turn in between the two antiparallel β-strands that make up the stall motif, but this turn has a RG motif which is  a destabilizing dipeptide. Could it be that when the turn is also a staller that the whole motif itself becomes stalling? https://www.rcsb.org/3d-view/2IL1/
+
+```{r}
+lfc %>% 
+  filter(gene_name == "RAB12") %>% 
+  left_join(s4pred %>% select(strand, gene_name, mutant_type), by = c("gene_name", "mutant_type")) %>% 
+  select(gene_name, strand, lfc, strength, mutant_type, aa, matches("^count|n_")) %>% 
+  rename_with(~gsub("n_barcodes", "nb", .x)) %>% 
+  rename_with(~gsub("count", "c", .x)) %>% 
+  mutate(across(c("strand","lfc"), ~ round(.x, 2))) %>% 
+  knitr::kable()
+```
+
+S4Pred score for each aa in RAB12
+
+```{r, fig.width=6, fig.height=2}
+s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+  filter(gene_name == "RAB12") %>%
+  ggplot(aes(x = loc, y = p, color = ss)) +
+  facet_wrap(~mutant_type) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = cbPalette) +
+  NULL
+```
+
+## ADAP2 is highly destabilizing
+
+- The protein encoded by this gene binds beta-tubulin and increases the stability of microtubules. The encoded protein can also translocate to the cell membrane and bind phosphatidylinositol 3,4,5-trisphosphate (PtdInsP3) and inositol 1,3,4,5-tetrakisphosphate (InsP4). In addition, this protein is a GTPase-activating protein for ADP ribosylation factor 6 and may be able to block the entry of some RNA viruses. 
+- It also has a high β-strand score
+- Both stability and strand score are negated by KV mutations.
+
+```{r}
+lfc %>% 
+  filter(gene_name == "ADAP2") %>% 
+  left_join(s4pred %>% select(strand, gene_name, mutant_type), by = c("gene_name", "mutant_type")) %>% 
+  select(gene_name, strand, lfc, strength, mutant_type, aa, matches("^count|n_")) %>% 
+  rename_with(~gsub("n_barcodes", "nb", .x)) %>% 
+  rename_with(~gsub("count", "c", .x)) %>% 
+  mutate(across(c("strand","lfc"), ~ round(.x, 2))) %>% 
+  knitr::kable()
+```
+
+S4Pred score for each aa in ADAP2
+
+```{r, fig.width=6, fig.height=2}
+s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+  filter(gene_name == "ADAP2") %>%
+  ggplot(aes(x = loc, y = p, color = ss)) +
+  facet_wrap(~mutant_type) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = cbPalette) +
+  NULL
+```
+
+## POLQ more destabilizing in mouse than human
+
+- Correlated with strand propensity
+
+```{r}
+lfc %>% 
+  filter(str_detect(gene_name, "POLQ|Polq")) %>% 
+  left_join(s4pred %>% select(strand, gene_name, mutant_type), by = c("gene_name", "mutant_type")) %>% 
+  select(gene_name, strand, lfc, strength, mutant_type, aa, matches("^count|n_")) %>% 
+  rename_with(~gsub("n_barcodes", "nb", .x)) %>% 
+  rename_with(~gsub("count", "c", .x)) %>% 
+  mutate(across(c("strand","lfc"), ~ round(.x, 2))) %>% 
+  knitr::kable()
+```
+
+S4Pred score for each aa in Polq/POLQ
+
+```{r, fig.width=6, fig.height=2}
+s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+  filter(ss == "strand") %>% 
+  filter(str_detect(gene_name, "POLQ|Polq")) %>% 
+  ggplot(aes(x = loc, y = p, color = gene_name)) +
+  facet_wrap(~mutant_type) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = cbPalette) +
+  NULL
+```
+
+## PKR/EIF2AK2 is moderately destabilizing
+
+- It also has a high β-strand score
+- Both stability and strand score are negated by KV mutations.
+
+```{r}
+lfc %>% 
+  filter(gene_name == "EIF2AK2") %>% 
+  left_join(s4pred %>% select(strand, gene_name, mutant_type), by = c("gene_name", "mutant_type")) %>% 
+  select(gene_name, strand, lfc, strength, mutant_type, aa, matches("^count|n_")) %>% 
+  rename_with(~gsub("n_barcodes", "nb", .x)) %>% 
+  rename_with(~gsub("count", "c", .x)) %>% 
+  mutate(across(c("strand","lfc"), ~ round(.x, 2))) %>% 
+  knitr::kable()
+```
+
+S4Pred score for each aa in EIF2AK2
+
+```{r, fig.width=6, fig.height=2}
+s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+filter(gene_name == "EIF2AK2") %>%
+  ggplot(aes(x = loc, y = p, color = ss)) +
+  facet_wrap(~mutant_type) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = cbPalette) +
+  NULL
+```
+
+## POGLUT2 is moderately destabilizing
+
+- It also has a high β-strand score
+- Both stability and strand score are negated by KV mutations.
+
+```{r}
+lfc %>% 
+  filter(gene_name == "POGLUT2") %>% 
+  left_join(s4pred %>% select(strand, gene_name, mutant_type), by = c("gene_name", "mutant_type")) %>% 
+  select(gene_name, strand, lfc, strength, mutant_type, aa, matches("^count|n_")) %>% 
+  rename_with(~gsub("n_barcodes", "nb", .x)) %>% 
+  rename_with(~gsub("count", "c", .x)) %>% 
+  mutate(across(c("strand","lfc"), ~ round(.x, 2))) %>% 
+  knitr::kable()
+```
+
+S4Pred score for each aa in POGLUT2
+
+```{r, fig.width=6, fig.height=2}
+s4pred_detailed %>% 
+  right_join(s4pred %>% select(-loc, -helix, -turn), by = c("index" = "index_1")) %>%
+filter(gene_name == "POGLUT2") %>%
+  ggplot(aes(x = loc, y = p, color = ss)) +
+  facet_wrap(~mutant_type) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = cbPalette) +
+  NULL
+```
+
+# Do S4-predicted β-strand stall motifs have lower mRNA stability than other stall motifs?
+
+
+We consider all motifs with stall strength >= 10.
+
+We classify motifs with average p_strand >= 0.5 as strands. 
+
+Based on above, it looks like stranded motifs have a slightly lower mRNA level than non-stranded motifs (0.23).
+
+```{r, fig.width=1.2, fig.height=1}
+plot_data <- lfc %>% 
+  filter(mutant_type == "wildtype") %>%
+  filter(!str_detect(aa, "\\*")) %>% 
+  left_join(s4pred %>% select(helix, strand, motif_source, gene_name, mutant_type), by = c("motif_source", "gene_name", "mutant_type")) %>% 
+  select(strand, helix, everything()) %>% 
+  filter(motif_source == "human_vk_motif_10") %>% 
+  mutate(ss = fct_rev(case_when(strand >= 0.5 ~ "strand",
+                        T ~ "other"
+                        ))) %>% 
+  print()
+
+label_data <- plot_data %>% 
+  group_by(ss) %>% 
+  summarize(n = paste0("N = ", dplyr::n()))
+  
+
+plot_data %>% 
+  ggplot(aes(x = ss, y = lfc, fill = ss)) +
+  scale_fill_manual(values = cbPalette[c(2,1)]) +
+  geom_violin() +
+  geom_text(aes(x = ss, label = n), y = -3.2, data = label_data, size = 2, alpha = 0.5) +
+  guides(fill = F) + 
+  scale_y_continuous(breaks = c(-2, 0, 2), limits = c(-3.5, 2.2)) +
+  labs(x = "Predicted secondary structure")
+
+ggsave("../figures/violin_plot_strand_vs_nonstrand_stalls_mrna_levels.pdf")
+```
+
+## Effect size for above plot
+
+```{r, fig.width=3, fig.height=2}
+plot_data %>% 
+  group_by(ss) %>% 
+  summarize(n = dplyr::n(), median_lfc = median(lfc)) %>% 
+  knitr::kable()
+```
+
+## P-value for above plot
+
+```{r}
+wilcox.test(lfc ~ ss, data=plot_data %>% filter(ss != "helix"), alternative = "less") %>% 
+  broom::tidy() %>% 
+  knitr::kable()
+```
+# Plot the histogram of change in LFC upon KnextV or VnextK mutations
+```{r}
+plot_data %>% 
+  select(strand, gene_name, mutant_type, lfc) %>% 
+  inner_join(lfc %>% select(lfc, gene_name, mutant_type), by = "gene_name", suffix = c("_wt", "_mut")) %>%
+  mutate(dellfc = lfc_wt - lfc_mut) %>% 
+  filter(mutant_type_mut != "wildtype") %>% 
+  ggplot(aes(x = dellfc)) +
+  facet_wrap(~ mutant_type_mut) +
+  geom_histogram(bins = 50) +
+  # mutate(strand = if_else(strand > 0.5, T, F)) %>%
+  # group_by(mutant_type_mut) %>%
+  # summarize(median_dellfc = median(dellfc)) %>%
+  # ungroup() %>%
+  # filter(strand > 0.5) %>% 
+  # arrange(dellfc) %>% 
+  # print()
+  NULL
+```
+
+# Plot WT + mutant data for the top-10 destabilizing stranded stalls
+
+```{r, fig.width=4, fig.height=3}
+plot_data %>% 
+  # arrange(-lfc) %>% 
+  filter(strand > 0.5) %>% 
+  slice(1:10) %>%
+  select(gene_name) %>%
+  inner_join(lfc, by = "gene_name") %>%
+  mutate(lfc = lfc) %>%
+  group_by(gene_name) %>%
+  mutate(wt_lfc = lfc[mutant_type == "wildtype"]) %>%
+  ungroup() %>%
+  mutate(gene_name = fct_reorder(gene_name, wt_lfc)) %>%
+  select(gene_name, strength, mutant_type, lfc) %>%
+  filter(!is.na(mutant_type)) %>%
+  ggplot(aes(x = gene_name, y = lfc, fill = fct_rev(mutant_type))) +
+  geom_col(position = position_dodge(preserve = "single"), width = 0.8) +
+  scale_fill_manual(values = cbPalette[2:4]) +
+  labs(x = "", y = "mRNA level (log2, a.u.)", fill = "",
+       title = "10 most destabilizing β-stranded stalls") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# print()
+
+# ggsave("../figures/20210707_top10_stranded_stalls_KnextV_VnextK.pdf")
+```
+
+# Analyze Han 2020 destabilizing motifs
+
+Interesting genes
+
+- CHD4
+  - strength 11
+  - lfc -0.96
+  - motif_read_density (avg+20+30) 2.14
+- EIF1AX
+- JUN
+- SSRP1 (also is beta stranded, see above)
+- TOMM70
+```{r}
+han_2020_motifs <- read_tsv("/fh/fast/subramaniam_a/user/rasi/analysis/riboseq/other_datasets/all_datasets/tables/20210215_vk_type_motifs_controls_han2020_plus20to30_mean_ribo_density.tsv.gz") %>% 
+  select(motif_type, motif_read_density, cds_read_density, gene_name, strength) %>% 
+  select(-strength) %>% 
+  inner_join(lfc, by = c("gene_name", "motif_type")) %>%
+  select(gene_name, lfc, strength,mutant_type, motif_type, everything()) %>%
+  filter(mutant_type == "wildtype") %>%
+  filter(motif_type == "stall") %>%
+  filter(lfc <= -0.75) %>%
+  arrange(-strength, lfc) %>%
+  filter(gene_name %in% c("VAPA")) %>%
+  print()
+```
+
+# Analyze Weber 2020 destabilizing motifs
+
+There are 88 motifs that have LFC <= -0.75 that are present in genes up-regulated in Weber 2020 upon knockout of GIGYF2.
+
+Some interesting candidates are:
+- HSPH1 (motif strength 13)
+- PRKCQ (motif strength 11)
+- JUN (involved in response to collisions)
+
+Among above 3, only PRKCQ has a higher than median increase in mRNA level for KnextV mutations. Other are closer to the median change of ~0.4.
+
+```{r}
+weber_2020_motifs <- read_tsv("/fh/fast/subramaniam_a/user/rasi/analysis/riboseq/other_datasets/weber_2020_gigyf2/tables/20210216_weber_2020_vk_motifs_upregulated_genes.tsv.gz") %>% 
+  filter(!is.na(motif)) %>% 
+  distinct(gene, motif, .keep_all = T) %>%
+  select(-strength, -loc, -transcript_id) %>% 
+  inner_join(lfc, by = c("gene" = "gene_name")) %>%
+  select(gene, lfc, strength, motif_type, mutant_type, everything()) %>% 
+  # filter(lfc <= -0.75, mutant_type == "wildtype") %>% 
+  arrange(-strength, lfc) %>%
+  filter(gene %in% c("JUN", "PRKCQ", "HSPH1")) %>% 
+  print()
+```
+
+
+# CoV2 motifs
+
+```{r}
+cov2_lfc <- lfc %>% 
+  select(-motif_type, -mutant_type, -strength) %>% 
+  filter(!motif_source == "rg4") %>% 
+  filter(motif_source == "cov2") %>%
+  separate(gene_name, c("gene", "location")) %>% 
+  type_convert() %>% 
+  print()
+```
+
+# Plot CoV2 instability along coding regions
+
+- Characteristic dips in mRNA stability at specific locations in specific genes. Neighboring 9nt-shifted regions are often correlated enabling us to identify the sequence motif responsible for de-stabilization within a 9nt interval.
+
+```{r, fig.height=10, fig.width=10}
+cov2_lfc %>% 
+  ggplot(aes(x = location, y = lfc)) +
+  facet_wrap(~ gene, ncol = 2, scale = "free_x") +
+  geom_point(size = 1) +
+  geom_line() +
+  labs(x = "Location along ORF (nt)", y = "mRNA level (log2, a.u.)") 
+```
+
+## A C-terminal segment in CoV2 ORF1ab is highly destabiling
+
+```{r}
+cov2_lfc %>% 
+  filter(gene == "ORF1ab") %>% 
+  filter(location > 12950, location < 13100) %>% 
+  arrange(location) %>% 
+  knitr::kable()
+```
+
+# HIV1 motifs
+
+```{r}
+hiv1_lfc <- lfc %>% 
+  select(-motif_type, -mutant_type, -strength) %>% 
+  filter(motif_source == "hiv1") %>%
+  separate(gene_name, c("gene", "location")) %>% 
+  type_convert() %>% 
+  print()
+```
+
+# Plot  HIV1 instability along coding regions
+
+- Characteristic dips in mRNA stability at specific locations in specific genes. Neighboring 9nt-shifted regions are often correlated enabling us to identify the sequence motif responsible for de-stabilization within a 9nt interval.
+- The rev100 motif has AG stretches that we have observed to be destabilizing in our dicodon assays.
+
+```{r, fig.height=10, fig.width=10}
+hiv1_lfc %>% 
+  ggplot(aes(x = location, y = lfc)) +
+  facet_wrap(~ gene, ncol = 2, scale = "free_x") +
+  geom_point(size = 1) +
+  geom_line() +
+  labs(x = "Location along ORF (nt)", y = "mRNA level (log2, a.u.)") 
+```
+# Influenza motifs
+
+```{r}
+flu_lfc <- lfc %>% 
+  select(-motif_type, -mutant_type, -strength) %>% 
+  filter(motif_source == "flu") %>%
+  separate(gene_name, c("gene", "location")) %>% 
+  type_convert() %>% 
+  print()
+```
+# Plot flu instability along coding regions
+
+- Characteristic dips in mRNA stability at specific locations in specific genes. Neighboring 9nt-shifted regions are often correlated enabling us to identify the sequence motif responsible for de-stabilization within a 9nt interval.
+
+```{r, fig.height=10, fig.width=10}
+flu_lfc %>% 
+  ggplot(aes(x = location, y = lfc)) +
+  facet_wrap(~ gene, ncol = 2, scale = "free_x") +
+  geom_point(size = 1) +
+  geom_line() +
+  labs(x = "Location along ORF (nt)", y = "mRNA level (log2, a.u.)") 
+```
+# Conclusions
+
+TBD
