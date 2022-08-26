@@ -36,7 +36,7 @@ docker pull ghcr.io/rasilab/burke_2022:latest
 
 - Open this repo inside VScode remote development container. It should automatically pick up the above image based on [](./.devcontainer/devcontainer.json).
 
-- Run the analysis workflow from the command line inside the VScode  container:
+- Run the analysis workflow from the command line inside the VScode container:
 
 ```
 cd scripts/
@@ -51,6 +51,7 @@ grabnode # for fred hutch only, get max 36 nodes
 cd scripts
 module load singularity # for fred hutch cluster
 singularity pull docker://ghcr.io/rasilab/burke_2022:latest
-conda activate snakamake # this is a minimal conda env that has snakemake-minimal and pandas for invoking snakefile
-snakemake -p --cores=all -use-conda --use-singularity
+conda activate snakemake # this is a minimal conda env that has snakemake-minimal and pandas for invoking snakefile
+sh submit_local.sh # adjust this script to mount the parent directory
+# sh submit_cluster.sh # uses SLURM to run the containers in parallel, adjust script to mount parent directory
 ```
