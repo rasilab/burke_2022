@@ -49,3 +49,7 @@ RUN mamba install -y -n sratools -c bioconda -c conda-forge sra-tools=2.11.0
 RUN mamba create -n bowtie2_samtools
 RUN mamba install -y -n bowtie2_samtools -c bioconda -c conda-forge bowtie2=2.4.5
 RUN mamba install -y -n bowtie2_samtools -c bioconda -c conda-forge samtools=1.15.1
+
+# Set jupyter data dir for discovering kernels
+ENV JUPYTER_DATA_DIR="/opt/conda/share/jupyter"
+ENV JUPYTER_CONFIG_DIR="/opt/conda/share/jupyter"
