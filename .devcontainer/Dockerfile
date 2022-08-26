@@ -7,6 +7,9 @@ RUN conda install -y mamba -c conda-forge
 # Install standard python packages in base conda environment
 RUN mamba install -y -c conda-forge jupyter ipykernel
 
+# install python packages
+RUN mamba install -y -c conda-forge pandas biopython plotnine
+
 # Create a separate R conda environment 
 RUN mamba create -y -n R
 # tidyverse and R jupyter kernel
@@ -20,8 +23,7 @@ RUN mamba install -y -n R -c conda-forge \
 RUN mamba install -y -n R -c bioconda -c conda-forge \
   bioconductor-plyranges \
   bioconductor-genomicfeatures \
-  bioconductor-rtracklayer \
-  bioconductor-bsgenome.hsapiens.ucsc.hg38    
+  bioconductor-rtracklayer
 
 # Make R kernel visible to Jupyter
 RUN /opt/conda/envs/R/bin/R -s -e "IRkernel::installspec(sys_prefix = T)"
