@@ -42,6 +42,7 @@ def get_bowtie_reference_for_sample_name(wildcards, **kwargs):
   print(index)
   return index
 
+container: "../../../../scripts/burke_2022_latest.sif"
 
 # these rules are run locally
 localrules: all
@@ -156,6 +157,7 @@ rule count:
   threads: 8
   shell:
     """
+    export TMPDIR=$(pwd) # necessary for sort command below to run inside singularity
     samtools idxstats {input} 1> {wildcards.sample_name}.tmp 2> {log}
     awk 'BEGIN {{OFS="\\t"; print "barcode","count";}} $3 != "0" {{print $1,$3 | "sort -k2nr -k1,1n"}}' {wildcards.sample_name}.tmp | gzip -c > {output} 2> {log}
     rm {wildcards.sample_name}.tmp
