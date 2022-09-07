@@ -18,6 +18,7 @@ fastq_dir = "../../../../data/fastq"
 fastq_files = os.listdir(fastq_dir)
 print(fastq_files)
 
+container: "../../../../scripts/burke_2022_latest.sif"
 
 rule all:
   """List of all files we want at the end
@@ -25,11 +26,11 @@ rule all:
   input:
     [f'../data/bowtie2_reference/{sample_name}.1.bt2' for sample_name in sample_annotations.loc[:, "sample_name"]],
     [f'../data/fastq/{sample_name}.fastq' for sample_name in sample_annotations.loc[:, "sample_name"]],
-    [f'../data/alignments/{sample_name}.bam' for sample_name in sample_annotations.loc[:, "sample_name"]],
-    [f'../data/filtered_alignments/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
-    [f'../data/insert_barcode_counts/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
-    [f'../data/ref_vs_ref_alignments/{sample_name}/alignment_barcode1.bam' for sample_name in sample_annotations.loc[:, "sample_name"]],
-    [f'../data/filtered_barcodes/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
+    # [f'../data/alignments/{sample_name}.bam' for sample_name in sample_annotations.loc[:, "sample_name"]],
+    # [f'../data/filtered_alignments/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
+    # [f'../data/insert_barcode_counts/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
+    # [f'../data/ref_vs_ref_alignments/{sample_name}/alignment_barcode1.bam' for sample_name in sample_annotations.loc[:, "sample_name"]],
+    # [f'../data/filtered_barcodes/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
 
 
 def get_fastq_file_for_sample_name(wildcards):
@@ -133,8 +134,6 @@ rule sort_and_index_bam:
   conda: "bowtie2_samtools"
   shell:
     """
-    # remove the SEQ and QUAL fields in SAM since they are stored in FASTQ 
-    awk 'BEGIN {{OFS = "\t";}} !/^@/ {{$10="*"; $11="*"}} 1' {input} > {input}.tmp && mv {input}.tmp {input};
     # convert to BAM
     samtools view -@ {threads} -b {input} > {params.unsorted_bam} 2> {log}
     # sort
