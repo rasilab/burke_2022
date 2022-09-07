@@ -8,3 +8,6 @@
 *.bam.bai
 *.fasta
 .snakemake/
+slurm-*
+*.sif
+*.nbconvert.*

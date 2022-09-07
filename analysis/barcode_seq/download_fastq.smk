@@ -1,24 +1,24 @@
 import pandas as pd
 import itertools as it
 
-sra_annotations = pd.read_table("../annotations/sra_annotations.tsv")
+sra_annotations = pd.read_table("../../annotations/sra_annotations.tsv")
 print(sra_annotations)
 
+container: "../burke_2022_latest.sif"
+
 rule all:
-    input:
-        sra = [f'../data/fastq/{srr}.fastq' for srr in sra_annotations['srr']]
+  input:
+    fastq = [f'../../data/fastq/{srr}.fastq' for srr in sra_annotations['srr']]
 
 
 rule get_fastq:
   """Download fastq from SRA"""
-  input:
-  output: '../data/fastq/{srr}.fastq'
+  input: '../../annotations/sra_annotations.tsv'
+  output: '../../data/fastq/{srr}.fastq'
   params:
-    directory = '../data/fastq/'
+    directory = '../../data/fastq/'
   conda: "sratools"
-  threads : 8
-  container: 'burke_2022_latest.sif'
-  # conda: "sratools"
+  threads : 36
   shell:
     """
     set +e # continue if there is an error code

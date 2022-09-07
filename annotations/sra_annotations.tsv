@@ -1,27 +1,37 @@
-srr	sample_id	sample_name	nreads
-SRR17125806	146p28	stall4control4_linkage	2
-SRR17125807	146p27	stall4control4_linkage	2
-SRR17125808	146p26	stall4control4_linkage	2
-SRR17125809	146p25	stall4control4_linkage	2
-SRR17125810	146p24	stall4control4_linkage	2
-SRR17125811	146p23	stall4control4_linkage	2
-SRR17125812	139p7	endo12k_linkage	1
-SRR17125813	146p16	stall4control4_t8	1
-SRR17125814	146p15	stall4control4_t4	1
-SRR17125815	146p14	stall4control4_t2	1
-SRR17125816	146p13	stall4control4_t1	1
-SRR17125817	146p12	stall4control4_t0.5	1
-SRR17125818	146p11	stall4control4_t0	1
-SRR17125819	107p2	didi_linkage_2	1
-SRR17125820	146p10	stall4control4_mrna	1
-SRR17125821	146p9	stall4control4_grna	1
-SRR17125822	139p4	endo12k_mrna	1
-SRR17125823	139p3	endo12k_grna	1
-SRR17125824	107p10	didi_mrna_2	1
-SRR17125825	107p9	didi_mrna_1	1
-SRR17125826	107p8	didi_grna_2	1
-SRR17125827	107p7	didi_grna_1	1
-SRR17125828	100p3	dicodon_mrna	1
-SRR17125829	100p2	dicodon_grna	1
-SRR17125830	107p1	didi_linkage_1	1
-SRR17125831	100p10	dicodon_linkage	1
+srr	sample_id	sample_name
+SRR21277961	104p10	dicodon_facs_unsorted_2
+SRR21277962	104p9	dicodon_facs_unsorted_1
+SRR21277963	104p8	dicodon_facs_off_low_2
+SRR21277964	104p7	dicodon_facs_off_high_2
+SRR21277965	104p6	dicodon_facs_on_low_2
+SRR21277966	104p5	dicodon_facs_on_high_2
+SRR21277967	104p4	dicodon_facs_off_low_1
+SRR21277968	104p3	dicodon_facs_off_high_1
+SRR21277969	104p2	dicodon_facs_on_low_1
+SRR21277970	104p1	dicodon_facs_on_high_1
+SRR17125806	146p28	stall4control4_linkage
+SRR17125807	146p27	stall4control4_linkage
+SRR17125808	146p26	stall4control4_linkage
+SRR17125809	146p25	stall4control4_linkage
+SRR17125810	146p24	stall4control4_linkage
+SRR17125811	146p23	stall4control4_linkage
+SRR17125812	139p7	endo12k_linkage
+SRR17125813	146p16	stall4control4_t8
+SRR17125814	146p15	stall4control4_t4
+SRR17125815	146p14	stall4control4_t2
+SRR17125816	146p13	stall4control4_t1
+SRR17125817	146p12	stall4control4_t0.5
+SRR17125818	146p11	stall4control4_t0
+SRR17125819	107p2	didi_linkage_2
+SRR17125820	146p10	stall4control4_mrna
+SRR17125821	146p9	stall4control4_grna
+SRR17125822	139p4	endo12k_mrna
+SRR17125823	139p3	endo12k_grna
+SRR17125824	107p10	didi_mrna_2
+SRR17125825	107p9	didi_mrna_1
+SRR17125826	107p8	didi_grna_2
+SRR17125827	107p7	didi_grna_1
+SRR17125828	100p3	dicodon_mrna
+SRR17125829	100p2	dicodon_grna
+SRR17125830	107p1	didi_linkage_1
+SRR17125831	100p10	dicodon_linkage
