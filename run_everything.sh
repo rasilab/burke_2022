@@ -17,10 +17,10 @@ jupyter nbconvert --to notebook --execute --ExecutePreprocessor.kernel_name=ir d
 
 # run Pool 3 linkage analysis
 cd $base_folder
-cd scripts/barcode_seq/pool3_linkage/scripts
-sh ../../../submit_cluster.sh
+cd analysis/barcode_seq/pool3_linkage/scripts
+sh submit_cluster.sh
 
 # run Pool 3 mRNA barcode counting analysis
 cd $base_folder
-cd scripts/barcode_seq/pool3_linkage/scripts
-# sh ../../../submit_cluster.sh
+cd analysis/barcode_seq/pool3_linkage/scripts
+sh submit_cluster.sh
