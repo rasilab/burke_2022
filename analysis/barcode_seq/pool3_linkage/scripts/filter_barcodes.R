@@ -98,7 +98,7 @@ filtered_barcodes <- insert_barcodes %>%
   anti_join(select(exclude1, qname), by = c("barcode_num" = "qname")) %>%
   anti_join(select(many_to_one_barcode_combinations, barcode_num), by = "barcode_num") %>%
   select(insert_num, barcode_num, barcode_1, read_count) %>%
-  arrange(read_count) %>%
+  arrange(desc(read_count)) %>%
   mutate(barcode_num = 1:dplyr::n()) %>%
   write_tsv(output_file) %>%
   print()
