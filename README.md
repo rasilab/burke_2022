@@ -47,8 +47,8 @@ snakemake -p --cores=all --use-conda
 - To run this on a cluster with singularity containers, do:
 
 ```
-grabnode # for fred hutch only, get max 36 nodes
-cd scripts
+grabnode # for fred hutch only, get max 36 nodes, max 720G memory, for **1** day, with no GPU
+cd analysis
 module load singularity # for fred hutch cluster
 singularity pull docker://ghcr.io/rasilab/burke_2022:latest
 conda activate snakemake # this is a minimal conda env that has snakemake-minimal and pandas for invoking snakefile

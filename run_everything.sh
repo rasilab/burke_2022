@@ -1,7 +1,7 @@
 base_folder=$(pwd)
 echo "Running analysis in $base_folder folder"
 cd analysis/
-# For singularity only
+# For singularity only, run this from command line before running this script
 # module load Singualarity
 # conda activate snakemake 
 singularity pull docker://ghcr.io/rasilab/burke_2022:latest
