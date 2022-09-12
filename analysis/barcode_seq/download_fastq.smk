@@ -4,7 +4,7 @@ import itertools as it
 sra_annotations = pd.read_table("../../annotations/sra_annotations.tsv")
 print(sra_annotations)
 
-container: "../burke_2022_latest.sif"
+container: "../../burke_2022_latest.sif"
 
 rule all:
   input:

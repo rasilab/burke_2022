@@ -1,4 +1,4 @@
-container: "../burke_2022_latest.sif"
+container: "../../burke_2022_latest.sif"
 
 rule download_sra_annotations:
   input:

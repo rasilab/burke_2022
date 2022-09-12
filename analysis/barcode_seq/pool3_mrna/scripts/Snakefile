@@ -42,7 +42,7 @@ def get_bowtie_reference_for_sample_name(wildcards, **kwargs):
   print(index)
   return index
 
-container: "../../../burke_2022_latest.sif"
+container: "../../../../burke_2022_latest.sif"
 
 # these rules are run locally
 localrules: all
