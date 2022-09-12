@@ -50,6 +50,5 @@ RUN mamba create -n bowtie2_samtools
 RUN mamba install -y -n bowtie2_samtools -c bioconda -c conda-forge bowtie2=2.4.5
 RUN mamba install -y -n bowtie2_samtools -c bioconda -c conda-forge samtools=1.15.1
 
-# Set jupyter data dir for discovering kernels
-ENV JUPYTER_DATA_DIR="/opt/conda/share/jupyter"
-ENV JUPYTER_CONFIG_DIR="/opt/conda/share/jupyter"
+# for reading fasta sequence in python
+RUN mamba install -y -c bioconda pyfaidx
