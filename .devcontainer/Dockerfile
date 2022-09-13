@@ -54,6 +54,4 @@ RUN mamba install -y -n bowtie2_samtools -c bioconda -c conda-forge samtools=1.1
 RUN mamba install -y -c bioconda pyfaidx
 
 # genome file
-# The conda package does not work, so we install it from inside R
-RUN conda run -n R R -e "install.packages('BiocManager', repos='http://cran.us.r-project.org')"
-RUN conda run -n R R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg38')"
+RUN mamba install -n R -y -c bioconda bioconductor-bsgenome.hsapiens.ucsc.hg38
