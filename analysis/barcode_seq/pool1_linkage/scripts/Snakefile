@@ -18,6 +18,7 @@ fastq_dir = "../../../../data/fastq"
 fastq_files = os.listdir(fastq_dir)
 print(fastq_files)
 
+container: "../../../../burke_2022_latest.sif"
 
 rule all:
   """List of all files we want at the end
@@ -133,8 +134,9 @@ rule sort_and_index_bam:
   conda: "bowtie2_samtools"
   shell:
     """
-    # remove the SEQ and QUAL fields in SAM since they are stored in FASTQ 
-    awk 'BEGIN {{OFS = "\t";}} !/^@/ {{$10="*"; $11="*"}} 1' {input} > {input}.tmp && mv {input}.tmp {input};
+    # remove the SEQ and QUAL fields in SAM since they are stored in FASTQ
+    # PB: Maybe this line is not necessary - it's not in the pool3_linakge file.  
+    # awk 'BEGIN {{OFS = "\t";}} !/^@/ {{$10="*"; $11="*"}} 1' {input} > {input}.tmp && mv {input}.tmp {input};
     # convert to BAM
     samtools view -@ {threads} -b {input} > {params.unsorted_bam} 2> {log}
     # sort
