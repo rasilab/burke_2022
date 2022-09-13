@@ -52,3 +52,7 @@ RUN mamba install -y -n bowtie2_samtools -c bioconda -c conda-forge samtools=1.1
 
 # for reading fasta sequence in python
 RUN mamba install -y -c bioconda pyfaidx
+
+# genome file
+RUN conda run -n R R -e "install.packages('BiocManager', repos='http://cran.us.r-project.org')"
+RUN conda run -n R R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg38')"
