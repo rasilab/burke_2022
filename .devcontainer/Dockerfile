@@ -55,3 +55,6 @@ RUN mamba install -y -c bioconda pyfaidx
 
 # genome file
 RUN mamba install -n R -y -c bioconda bioconductor-bsgenome.hsapiens.ucsc.hg38
+
+# for reading GFF files in python
+RUN conda run pip install gffpandas
