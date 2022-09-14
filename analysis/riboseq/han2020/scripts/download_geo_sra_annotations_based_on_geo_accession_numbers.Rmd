@@ -1,0 +1,141 @@
+---
+title: "Download GEO annotations"
+author: "`r Sys.info()[['user']]`"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  github_document:
+    toc: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+```
+
+This notebook takes the [../annotations/geo_accession_numbers.csv] file as input and produces two tables:
+1. A table of all samples (uniquely identified by GSM numbers) [../annotations/geo_annotations.tsv]. This uses the `GEOquery` R package.
+2. A table of all SRA runs (uniquely identified by SRR numbers) [../annotations/sra_annotations.tsv]. This uses the `reutils` R package.
+
+# Load libraries and define analysis-specific variables
+```{r}
+library(GEOquery)
+library(reutils)
+library(xml2)
+library(glue)
+library(tidyverse)
+```
+
+# Load GEO datasets that we want to download annotations and download GEO record
+```{r}
+geo_accessions <- read_csv("../annotations/geo_accession_numbers.csv", comment = "#") %>% 
+  mutate(geo = map(gse, . %>% getGEO(GSEMatrix = FALSE))) %>%
+  print()
+```
+
+# Define functions for parsing specific meta-data values
+```{r}
+get_bioproject_number <- function(geo) {
+  Meta(geo) %>% 
+  enframe("annotation", "value") %>%
+  unnest() %>%
+  mutate(bioproject_number = str_extract(value, "PRJNA[:digit:]+")) %>%
+  filter(!is.na(bioproject_number)) %>%
+  pull(bioproject_number)
+}
+
+get_gsm_meta <- function(gsm) {
+  Meta(gsm) %>% 
+  enframe("annotation", "value") %>%
+  unnest()
+}
+
+get_srx_number <- function(gsm) {
+  gsm %>% 
+    mutate(srx = str_extract(value, "SRX[:digit:]+")) %>%
+    filter(!is.na(srx)) %>%
+    pull(srx)
+}
+    
+get_gsm_title <- function(gsm) {
+  gsm %>% 
+    filter(annotation == "title") %>% 
+    pull(value) %>% 
+    janitor::make_clean_names()
+}
+
+get_gsm_organism <- function(gsm) {
+  gsm %>% 
+    filter(str_detect(annotation, "organism")) %>% 
+    pull(value) %>% 
+    janitor::make_clean_names()
+}
+
+get_gsm_celltype <- function(gsm) {
+  gsm %>%
+    mutate(celltype = str_extract(value, "293|((?<=cell line: |tissue: |cell type: ).+)")) %>%
+    filter(!is.na(celltype)) %>%
+    slice(1) %>% 
+    pull(celltype) %>% 
+    janitor::make_clean_names()
+}
+```
+
+# Parse Experiment and Project annotations
+```{r}
+geo_annotations <- geo_accessions %>% 
+  mutate(prjna = map_chr(geo, get_bioproject_number)) %>% 
+  mutate(gsm = map(geo, GSMList)) %>% 
+  select(-geo) %>% 
+  mutate(gsm_number = map(gsm, names)) %>%
+  unnest() %>%
+  mutate(gsm = map(gsm, get_gsm_meta)) %>%
+  mutate(sample_title = map_chr(gsm, get_gsm_title)) %>%
+  mutate(srx = map_chr(gsm, get_srx_number)) %>%
+  mutate(organism = map_chr(gsm, get_gsm_organism)) %>%
+  mutate(cell_type = map_chr(gsm, get_gsm_celltype)) %>%
+  select(-gsm) %>%
+  rename(gsm = gsm_number) %>%
+  select(gsm, gse, prjna, srx, cell_type) %>%
+  group_by(gsm) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(cell_type = if_else(str_detect(cell_type, "embryonic_kidney"), "HEK293T", cell_type)) %>% 
+  write_tsv("../annotations/geo_annotations.tsv") %>%
+  print()
+```
+
+# Get SRA Run information for the BioProject number associated with each study
+```{r}
+esearch_query <- geo_annotations %>% 
+  distinct(prjna) %>% 
+  # filter(prjna %in% c("PRJNA279465", "PRJNA555528")) %>%
+  pull() %>% 
+  paste0(collapse = " or ") %>% 
+  print()
+
+esearch_result <- esearch(esearch_query, db = "sra")
+efetch_result <- efetch(esearch_result, db = "sra")
+```
+
+# Parse XML file to extract SRA information
+```{r}
+sra_info <- read_xml(content(efetch_result, as = "text"))
+
+sra_annotations <- sra_info %>% 
+  xml_find_all("//EXPERIMENT") %>% 
+  map_df(xml_attrs) %>%
+  rename(srx = accession, gsm = alias) %>% 
+  mutate(sample_name = map(gsm, function (x) xml_text(xml_find_all(sra_info, glue('//SAMPLE[@alias="{x}"]/TITLE'))))) %>%
+  mutate(data = map(srx, function (x) bind_rows(xml_attrs(xml_find_all(sra_info, glue('//EXPERIMENT_REF[@accession="{x}"]/..')))))) %>%
+  unnest() %>%
+  select(gsm, srx, sample_name, accession, total_spots, total_bases) %>%
+  type_convert() %>%
+  rename(srr = accession) %>%
+  mutate(sample_name = janitor::make_clean_names(sample_name)) %>%
+  select(srr, everything()) %>%
+  left_join(select(geo_annotations, gsm, gse, cell_type), by = "gsm") %>%
+  select(-srx, -total_spots, -total_bases) %>%
+  left_join(select(geo_accessions, -geo), by = "gse") %>%
+  filter(str_detect(sample_name, tolower(study_subset)) | is.na(study_subset)) %>%
+  write_tsv("../annotations/sra_annotations.tsv") %>%
+  print()
+```
