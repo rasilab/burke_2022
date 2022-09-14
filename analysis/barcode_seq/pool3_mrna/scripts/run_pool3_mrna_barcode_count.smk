@@ -18,7 +18,6 @@ sample_annotations = pd.read_table("../annotations/sample_annotations.csv",
                                    sep=",", comment = "#", dtype=object)
 fastq_dir = "../../../../data/fastq"                                   
 fastq_files = os.listdir(fastq_dir)
-print(sample_annotations[['sample_id', 'sample_name', 'linkage_ref']])
 
 
 def get_fastq_file_for_sample_name(wildcards):
@@ -39,7 +38,6 @@ def get_bowtie_reference_for_sample_name(wildcards, **kwargs):
       print("Need a barcode direction (1 or 2) to get the correct bowtie reference file.")
 
   index = f'../data/bowtie_references/{linkage_ref}/reference_barcode_{barcode_direction}.1.bt2'
-  print(index)
   return index
 
 container: "../../../../burke_2022_latest.sif"

@@ -16,7 +16,6 @@ sample_annotations = pd.read_table("../annotations/sample_annotations.csv",
                                    sep=",", comment = "#", dtype=object)
 fastq_dir = "../../../../data/fastq"                                   
 fastq_files = os.listdir(fastq_dir)
-print(fastq_files)
 
 container: "../../../../burke_2022_latest.sif"
 
