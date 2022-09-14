@@ -5,9 +5,14 @@
 *.sam
 *.tsv.gz
 *.tsv
+*.csv
 *.bam.bai
 *.fasta
 .snakemake/
 slurm-*
 *.sif
 *.nbconvert.*
+.cache/
+*.html
+*.md
+
