@@ -9,10 +9,7 @@ import tabulate
 # configuration specific to this analysis
 study_annotations = pd.read_table("../annotations/geo_accession_numbers.csv",
                                   sep=",", comment="#")
-print(study_annotations)
-merged_annotations = pd.read_table(
-    "../annotations/sra_annotations.tsv", sep="\t")
-print(merged_annotations)
+merged_annotations = pd.read_table("../annotations/sra_annotations.tsv", sep="\t")
 
 # these rules are run locally
 localrules: all
@@ -22,7 +19,6 @@ localrules: all
 rule all:
     """List of all files we want at the end"""
     input:
-        '../annotations/sra_annotations.tsv',
         fastq = [f'../data/fastq/{srr}.fastq' for srr in merged_annotations.loc[:, "srr"]],
         transcript_alignments = [f'../data/alignments/{srr}.transcripts.bam' for srr in merged_annotations.loc[:, 'srr']],
         transcript_coverage = [f'../data/coverage/{gsm}.transcripts.bedGraph.gz' for gsm in set(merged_annotations.loc[:, "gsm"])],
@@ -30,20 +26,6 @@ rule all:
         codon_density = [f'../data/codon_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])],
         vk_type_density = [f'../data/vk_type_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])],
         vk_type_plots = "plot_vk_type_density_han2020.nbconvert.ipynb",
-
-
-rule get_sra_annotations:
-    input:
-        '../annotations/geo_accession_numbers.csv'
-    output:
-        '../annotations/sra_annotations.tsv'
-    params:
-        notebook = 'download_geo_sra_annotations_based_on_geo_accession_numbers.Rmd',
-    conda: "R"
-    shell:
-        """
-        Rscript -e "rmarkdown::render('{params.notebook}')"
-        """
 
 
 rule get_fastq:
