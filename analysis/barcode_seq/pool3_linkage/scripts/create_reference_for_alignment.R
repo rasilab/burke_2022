@@ -11,8 +11,7 @@
 #' 
 #' # Load libraries and define analysis-specific parameters
 ## --------------------------------------------------------------------------------------------------------------------------------------------------
-library_annotations_files <- c(human = "/fh/fast/subramaniam_a/user/rasi/analysis/cloningdesign/20210216_endogenous_vk_oligo_pool_design/tables/20210216_vk_type_endogenous_motifs_for_cloning.tsv",
-                               viral = "/fh/fast/subramaniam_a/user/rasi/analysis/cloningdesign/20210216_endogenous_vk_oligo_pool_design/tables/20210217_viral_rg4_motifs_for_cloning.tsv")
+library_annotations_files <- c(human = "../annotations/insert_annotations.tsv")
 output_file <- "../data/bowtie2_reference/endo12k.fasta"
 
 # from pHPHS286
