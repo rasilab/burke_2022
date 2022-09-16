@@ -11,9 +11,8 @@
 #' 
 #' # Load libraries and define analysis-specific parameters
 ## --------------------------------------------------------------------------------------------------------------------------------------------------
-library_annotations_files <- c(human = "/fh/fast/subramaniam_a/user/rasi/analysis/cloningdesign/20210216_endogenous_vk_oligo_pool_design/tables/20210216_vk_type_endogenous_motifs_for_cloning.tsv",
-                               viral = "/fh/fast/subramaniam_a/user/rasi/analysis/cloningdesign/20210216_endogenous_vk_oligo_pool_design/tables/20210217_viral_rg4_motifs_for_cloning.tsv")
-output_file <- "../data/bowtie2_reference/endo12k.fasta"
+library_annotations_files <- c(dicodon = "../annotations/insert_annotations.tsv")
+output_file <- "../data/bowtie2_reference/dicodon_linkage.fasta"
 
 # from pHPHS286
 flanking_5 <- "GGTGAACAGCTCCTCGCCCTTGCT"
@@ -56,7 +55,7 @@ library_annotations_files %>%
   arrange(desc(group)) %>%
   mutate(insert_num = 0:(dplyr::n()-1)) %>%
   arrange(-insert_num) %>% 
-  write_tsv("../annotations/insert_annotations/endo12k.tsv") %>%
+  write_tsv("../annotations/insert_annotations/dicodon_linkage.tsv") %>%
   arrange(insert_num) %>% 
   mutate(seq = subseq(seq, end = width(seq), width = seq_length)) %>%
   rename(insert_seq = seq) %>%

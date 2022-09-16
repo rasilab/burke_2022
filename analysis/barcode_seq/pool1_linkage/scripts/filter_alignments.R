@@ -14,8 +14,8 @@
 args <- commandArgs(trailingOnly = T)
 input_file <- args[1]
 output_file <- args[2]
-input_file <- "../data/alignments/endo12k.bam"
-output_file <- "../data/filtered_alignments/endo12k.tsv.gz"
+input_file <- "../data/alignments/dicodon_linkage.bam"
+output_file <- "../data/filtered_alignments/dicodon_linkage.tsv.gz"
 print(input_file)
 
 library(Biostrings)
