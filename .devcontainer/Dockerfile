@@ -61,7 +61,7 @@ RUN conda run pip install gffpandas
 
 # lab R templates
 RUN mamba install -n R -y -c conda-forge r-devtools
-RUN conda run -n R Rscript -e "devtools::install_github('rasilab/rasilabRtemplates', ref='613f440')"
+RUN conda run -n R Rscript -e "devtools::install_github('rasilab/rasilabRtemplates', ref='a857f62')"
 
 # for random resampling of data
 RUN mamba install -n R -y -c conda-forge r-rsample
