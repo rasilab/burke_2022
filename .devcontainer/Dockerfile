@@ -58,3 +58,10 @@ RUN mamba install -n R -y -c bioconda bioconductor-bsgenome.hsapiens.ucsc.hg38
 
 # for reading GFF files in python
 RUN conda run pip install gffpandas
+
+# lab R templates
+RUN mamba install -n R -y -c conda-forge r-devtools
+RUN conda run -n R Rscript -e "devtools::install_github('rasilab/rasilabRtemplates', ref='613f440')"
+
+# for random resampling of data
+RUN mamba install -n R -y -c conda-forge r-rsample
