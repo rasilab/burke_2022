@@ -28,7 +28,11 @@ rule all:
         vk_type_plots = "plot_vk_type_density_han2020.nbconvert.ipynb",
         kk_type_density = [f'../data/kk_type_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])],
         kk_type_plots = "plot_kk_type_density_han2020.nbconvert.ipynb",
-
+        vv_type_density = [f'../data/vv_type_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])],
+        vv_type_plots = "plot_vv_type_density_han2020.nbconvert.ipynb",
+        non_v_type_density = [f'../data/non_v_type_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])],
+        non_v_type_plots = "plot_non_v_type_density_han2020.nbconvert.ipynb",
+        
 
 rule get_fastq:
     """Download fastq from SRA"""
@@ -348,6 +352,100 @@ rule plot_kk_motif_density:
         notebook = "plot_kk_type_density_han2020.ipynb"
     log:
         '../data/kk_type_density/plot_kk_type_density.log'
+    conda: "R"
+    shell:
+        """
+        export JUPYTER_DATA_DIR=$(pwd)
+        export JUPYTER_CONFIG_DIR=$(pwd)
+        jupyter nbconvert --to notebook --execute \
+            --ExecutePreprocessor.kernel_name=ir {params.notebook} &> {log}
+        """
+
+
+rule get_vv_motif_density:
+    """Get the average ribosome density around each bulky motif"""
+    params:
+        transcript_annotations = lambda wildcards: merged_annotations.loc[merged_annotations['gsm'] == wildcards.gsm, 'transcript_annotations'].tolist()[0],
+        motif_annotations = lambda wildcards: merged_annotations.loc[merged_annotations['gsm'] == wildcards.gsm, 'vv_type_motif_annotations'].tolist()[0]
+    input:
+        '../data/coverage/{gsm}.transcripts.bedGraph.gz'
+    output:
+        motif_density_file = '../data/vv_type_density/{gsm}.tsv.gz'
+    log:
+        '../data/vv_type_density/{gsm}.log'
+    shell:
+        """
+        python find_ribosome_density_around_motifs.py \
+          --read_count_cutoff 100 \
+          --read_density_cutoff 0.33 \
+          --cds_length_cutoff 100 \
+          --l_overhang 50 \
+          --r_overhang 50 \
+          --transcript_annotation_file {params.transcript_annotations} \
+          --motif_annotation_file {params.motif_annotations} \
+          --ribosome_density_file {input} \
+          --motif_density_file {output.motif_density_file} \
+            &> {log}
+        """
+
+
+rule plot_vv_motif_density:
+    """Plot the average ribosome density around each bulky motif"""
+    input:
+        motif_density_file = [f'../data/vv_type_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])]
+    output:
+        "plot_vv_type_density_han2020.nbconvert.ipynb"
+    params:
+        notebook = "plot_vv_type_density_han2020.ipynb"
+    log:
+        '../data/vv_type_density/plot_vv_type_density.log'
+    conda: "R"
+    shell:
+        """
+        export JUPYTER_DATA_DIR=$(pwd)
+        export JUPYTER_CONFIG_DIR=$(pwd)
+        jupyter nbconvert --to notebook --execute \
+            --ExecutePreprocessor.kernel_name=ir {params.notebook} &> {log}
+        """
+
+
+rule get_non_v_motif_density:
+    """Get the average ribosome density around each bulky motif"""
+    params:
+        transcript_annotations = lambda wildcards: merged_annotations.loc[merged_annotations['gsm'] == wildcards.gsm, 'transcript_annotations'].tolist()[0],
+        motif_annotations = lambda wildcards: merged_annotations.loc[merged_annotations['gsm'] == wildcards.gsm, 'non_v_type_motif_annotations'].tolist()[0]
+    input:
+        '../data/coverage/{gsm}.transcripts.bedGraph.gz'
+    output:
+        motif_density_file = '../data/non_v_type_density/{gsm}.tsv.gz'
+    log:
+        '../data/non_v_type_density/{gsm}.log'
+    shell:
+        """
+        python find_ribosome_density_around_motifs.py \
+          --read_count_cutoff 100 \
+          --read_density_cutoff 0.33 \
+          --cds_length_cutoff 100 \
+          --l_overhang 50 \
+          --r_overhang 50 \
+          --transcript_annotation_file {params.transcript_annotations} \
+          --motif_annotation_file {params.motif_annotations} \
+          --ribosome_density_file {input} \
+          --motif_density_file {output.motif_density_file} \
+            &> {log}
+        """
+
+
+rule plot_non_v_motif_density:
+    """Plot the average ribosome density around each bulky motif"""
+    input:
+        motif_density_file = [f'../data/non_v_type_density/{gsm}.tsv.gz' for gsm in set(merged_annotations.loc[:, "gsm"])]
+    output:
+        "plot_non_v_type_density_han2020.nbconvert.ipynb"
+    params:
+        notebook = "plot_non_v_type_density_han2020.ipynb"
+    log:
+        '../data/non_v_type_density/plot_non_v_type_density.log'
     conda: "R"
     shell:
         """
