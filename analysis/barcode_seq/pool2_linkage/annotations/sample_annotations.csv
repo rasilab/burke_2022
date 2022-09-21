@@ -1,4 +1,4 @@
 # optional comment for each column  in this row. All commented out rows are preceded by # which can be ignored by dplyr and pandas.,,,,,# is the insert on R1 or R2?,# nt to 5’trim reads before insert alignment,# nt to 3’trim reads before insert alignment,,# 0-based indexing,
-owner,sample_name,plasmid,library_type,sample_id,insert_read,trim5,trim3,barcode1_read,barcode1_start,barcode1_length
-pb,didi_linkage_1,pPBHS309,plasmid,107p1,1,48,28,1,0,24
-pb,didi_linkage_2,pPBHS309,plasmid,107p2,1,48,28,1,0,24
+owner,sample_name,plasmid,library_type,sample_id,insert_read,trim5,trim3,barcode1_read,barcode1_start,barcode1_length,bowtie2_reference
+pb,didi_linkage_1,pPBHS309,plasmid,107p1,1,48,28,1,0,24,didi_linkage
+pb,didi_linkage_2,pPBHS309,plasmid,107p2,1,48,28,1,0,24,didi_linkage
