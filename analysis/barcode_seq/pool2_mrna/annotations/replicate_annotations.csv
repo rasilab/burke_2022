@@ -1,0 +1,5 @@
+sample_id,illumina_index,sample_name,sample_type,replicate,linkage_ref,sample_num
+107p7,GTAGCC,didi_grna_1,grna,1,didi_1_plasmid,1
+107p8,TACAAG,didi_grna_2,grna,2,didi_2_plasmid,2
+107p9,TTGACT,didi_mrna_1,mrna,1,didi_1_plasmid,3
+107p10,GGAACT,didi_mrna_2,mrna,2,didi_2_plasmid,4

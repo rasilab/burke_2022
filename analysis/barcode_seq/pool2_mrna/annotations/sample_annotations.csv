@@ -1,0 +1,6 @@
+# optional comment for each column  in this row,# all commented out rows are preceded by which can be ignored by dplyr and pandas,,,,,# 0-based indexing,,,,
+owner,sample_name,plasmid,library_type,sample_id,barcode1_read,barcode1_start,barcode1_length,linkage_ref,barcode1_trim5,barcode1_trim3
+pb,didi_grna_1,pPBHS309,grna,107p7,1,0,24,didi_linkage_1,0,126
+pb,didi_grna_2,pPBHS309,mrna,107p8,1,0,24,didi_linkage_2,0,126
+pb,didi_mrna_1,pPBHS309,grna,107p9,1,0,24,didi_linkage_1,0,126
+pb,didi_mrna_2,pPBHS309,mrna,107p10,1,0,24,didi_linkage_2,0,126
