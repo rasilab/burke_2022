@@ -89,7 +89,7 @@ barcode_insert_counts = (aln
                          .sort_values(by='read_count', ascending=False)
                          .reset_index(drop=True)
                          )
-# barcode_insert_counts = barcode_insert_counts[barcode_insert_counts['read_count'] >= 10].reset_index(drop=True)
+barcode_insert_counts = barcode_insert_counts[barcode_insert_counts['read_count'] >= 10].reset_index(drop=True)
 barcode_insert_counts.to_csv(output_file, sep = '\t', index_label = 'barcode_num')
 
 
