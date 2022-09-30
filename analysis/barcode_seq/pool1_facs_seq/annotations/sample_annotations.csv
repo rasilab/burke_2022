@@ -1,0 +1,12 @@
+# optional comment for each column  in this row,# all commented out rows are preceded by which can be ignored by dplyr and pandas,,,,,# 0-based indexing,,,,
+owner,sample_name,plasmid,library_type,sample_id,barcode1_read,barcode1_start,barcode1_length,linkage_ref,barcode1_trim5,barcode1_trim3
+pb,dicodon_facs_unsorted_2,pPBHS286,grna,104p10,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_unsorted_1,pPBHS286,grna,104p9,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_off_low_2,pPBHS286,grna,104p8,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_off_high_2,pPBHS286,grna,104p7,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_on_low_2,pPBHS286,grna,104p6,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_on_high_2,pPBHS286,grna,104p5,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_off_low_1,pPBHS286,grna,104p4,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_off_high_1,pPBHS286,grna,104p3,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_on_low_1,pPBHS286,grna,104p2,1,0,24,dicodon_linkage,3,23
+pb,dicodon_facs_on_high_1,pPBHS286,grna,104p1,1,0,24,dicodon_linkage,3,23

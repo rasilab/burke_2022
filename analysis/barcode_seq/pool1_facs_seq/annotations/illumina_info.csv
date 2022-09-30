@@ -1,0 +1,11 @@
+pool_name,sample_name,barcode1,barcode2,Pool Conc. (nM),Pool Size,Sequencing Primer,Sample Type,Quant Method,index_barcode,diagonal,expression,replicate,sampletype
+20201012_pb_hp,104p1,R2_ix_9,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,CTGATC,on,high,1,grna
+20201012_pb_hp,104p2,R2_ix_10,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,AAGCTA,on,low,1,grna
+20201012_pb_hp,104p3,R2_ix_11,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,GTAGCC,off,high,1,grna
+20201012_pb_hp,104p4,R2_ix_12,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,TACAAG,off,low,1,grna
+20201012_pb_hp,104p5,R2_ix_13,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,TTGACT,on,high,2,grna
+20201012_pb_hp,104p6,R2_ix_14,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,GGAACT,on,low,2,grna
+20201012_pb_hp,104p7,R2_ix_15,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,TGACAT,off,high,2,grna
+20201012_pb_hp,104p8,R2_ix_16,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,GGACGG,off,low,2,grna
+20201012_pb_hp,104p9,R2_ix_17,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,CTCTAC,unsorted,unsorted,1,grna
+20201012_pb_hp,104p10,R2_ix_18,,6,180,Illumina,PCR TruSeq,Qubit/PicoGreen,GCGGAC,unsorted,unsorted,1,gdna
