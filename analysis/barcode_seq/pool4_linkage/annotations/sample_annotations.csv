@@ -1,0 +1,8 @@
+# optional comment for each column  in this row. All commented out rows are preceded by # which can be ignored by dplyr and pandas.,,,,,,# is the insert on R1 or R2?,# nt to 5 trim reads before insert alignment,# nt to 3 trim reads before insert alignment,,# 0-based indexing,,
+owner,sample_name,plasmid,library_type,illumina_sample_id,sample_id,insert_read,trim5,trim3,barcode1_read,barcode1_start,barcode1_length,bowtie2_reference
+pb,stall4control4_linkage_1,phphs406.1,plasmid,sample_29,146p23,1,50,2,1,0,24,stall4control4_linkage
+pb,stall4control4_linkage_2,phphs406.2,plasmid,sample_30,146p24,1,50,2,1,0,24,stall4control4_linkage
+pb,stall4control4_linkage_3,phphs406.3,plasmid,sample_31,146p25,1,50,2,1,0,24,stall4control4_linkage
+pb,stall4control4_linkage_4,phphs406.4,plasmid,sample_32,146p26,1,50,2,1,0,24,stall4control4_linkage
+pb,stall4control4_linkage_5,phphs406.5,plasmid,sample_33,146p27,1,50,2,1,0,24,stall4control4_linkage
+pb,stall4control4_linkage_6,phphs406.6,plasmid,sample_34,146p28,1,50,2,1,0,24,stall4control4_linkage
