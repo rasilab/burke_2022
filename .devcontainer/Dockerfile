@@ -65,3 +65,6 @@ RUN conda run -n R Rscript -e "devtools::install_github('rasilab/rasilabRtemplat
 
 # for random resampling of data
 RUN mamba install -n R -y -c conda-forge r-rsample
+
+# free font resembling helvetica
+RUN apt update && apt install -y fonts-roboto
