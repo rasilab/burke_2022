@@ -16,16 +16,15 @@ sample_annotations = pd.read_table("../annotations/sample_annotations.csv",
                                    sep=",", comment = "#", dtype=object)
 fastq_dir = "../../../../data/fastq"                                   
 fastq_files = os.listdir(fastq_dir)
+print(sample_annotations)
 
 container: "../../../../burke_2022_latest.sif"
-
 rule all:
   """List of all files we want at the end
   """
   input:
-    # [f'../data/bowtie2_reference/{sample_name}.1.bt2' for sample_name in sample_annotations.loc[:, "sample_name"]],
     [f'../data/bowtie2_reference/{ref}.1.bt2' for ref in set(sample_annotations.loc[:, "bowtie2_reference"])],
-    [f'../data/fastq/{sample_name}.fastq' for sample_name in sample_annotations.loc[:, "sample_name"]],
+    [f'../data/fastq/{sample_name}.fastq' for sample_name in sample_annotations.loc[:, "sample_name"]], 
     [f'../data/alignments/{sample_name}.bam' for sample_name in sample_annotations.loc[:, "sample_name"]],
     [f'../data/filtered_alignments/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
     [f'../data/insert_barcode_counts/{sample_name}.tsv.gz' for sample_name in sample_annotations.loc[:, "sample_name"]],
@@ -99,7 +98,6 @@ rule align:
     trim5 = lambda wildcards: sample_annotations.loc[sample_annotations['sample_name'] == wildcards.sample_name, 'trim5'].item(),
     trim3 = lambda wildcards: sample_annotations.loc[sample_annotations['sample_name'] == wildcards.sample_name, 'trim3'].item(),
     reference = lambda wildcards: '../data/bowtie2_reference/' + sample_annotations.loc[sample_annotations['sample_name'] == wildcards.sample_name, 'bowtie2_reference'].item()
-    # reference = '../data/bowtie2_reference/{sample_name}'
   conda: "bowtie2_samtools"
   shell:
     """
