@@ -14,9 +14,6 @@
 args <- commandArgs(trailingOnly = T)
 input_file <- args[1]
 output_file <- args[2]
-input_file <- "../data/alignments/stall4control4_linkage.bam"
-output_file <- "../data/filtered_alignments/stall4control4_linkage.tsv.gz"
-print(input_file)
 
 library(Biostrings)
 library(GenomicAlignments)
