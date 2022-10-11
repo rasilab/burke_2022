@@ -1,0 +1,10 @@
+# optional comment for each column  in this row,# all commented out rows are preceded by which can be ignored by dplyr and pandas,,,,,# 0-based indexing,,,,
+owner,sample_name,plasmid,library_type,sample_id,barcode1_read,barcode1_start,barcode1_length,linkage_ref,barcode1_trim5,barcode1_trim3
+pb,stall4control4_grna,pPBHS406,grna,146p9,1,0,24,stall4control4,0,26
+pb,stall4control4_mrna,pPBHS406,mrna,146p10,1,0,24,stall4control4,0,26
+pb,stall4control4_t0,pPBHS406,mrna,146p11,1,0,24,stall4control4,0,26
+pb,stall4control4_t0.5,pPBHS406,mrna,146p12,1,0,24,stall4control4,0,26
+pb,stall4control4_t1,pPBHS406,mrna,146p13,1,0,24,stall4control4,0,26
+pb,stall4control4_t2,pPBHS406,mrna,146p14,1,0,24,stall4control4,0,26
+pb,stall4control4_t4,pPBHS406,mrna,146p15,1,0,24,stall4control4,0,26
+pb,stall4control4_t6,pPBHS406,mrna,146p16,1,0,24,stall4control4,0,26
