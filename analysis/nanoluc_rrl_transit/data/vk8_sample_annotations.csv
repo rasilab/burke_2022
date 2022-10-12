@@ -1,0 +1,17 @@
+well,id,test_dipeptide,dipeptide,replicate,reading_frame
+A3, 113m3  , VK    , VK    ,1,in_frame
+C3, 113m4  , VK    , QS    ,1,frameshift
+E3, 113m7  , SF    , SF    ,1,in_frame
+G3, 113m8  , SF    , FQ    ,1,frameshift
+I3, 113m9  , VK    , VK    ,2,in_frame
+K3, 113m10 , VK    , QS    ,2,frameshift
+M3, 113m11 , SF    , SF    ,2,in_frame
+O3, 113m12 , SF    , FQ    ,2,frameshift
+A5, 113m13 ,VK, VK    ,3,in_frame
+C5, 113m14 ,VK, QS    ,3,frameshift
+E5, 113m15 ,SF, SF    ,3,in_frame
+G5, 113m16 ,SF, FQ    ,3,frameshift
+I5, 113m17 ,None  ,None  ,1,in_frame
+K5, 113m18 ,3xTTA ,3xTTA ,1,in_frame
+M5, 113m19 ,None  ,None  ,2,in_frame
+O5, 113m20 ,3xTTA ,3xTTA ,2,in_frame
