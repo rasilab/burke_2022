@@ -110,7 +110,7 @@ rule align:
     --trim5 {params.trim5} \
     --trim3 {params.trim3} \
     --threads {threads} \
-    --nofw \
+    --norc \
     --no-unal \
     1> {output} \
     2> {log}
