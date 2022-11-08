@@ -3,4 +3,4 @@
   "time" : "24:00:00"
   "name" : "{rule}.{wildcards}"
   "mem" : 32
-  "n" : 4
+  "n" : 36

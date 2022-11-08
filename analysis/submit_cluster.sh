@@ -5,5 +5,4 @@ snakemake \
     --use-conda \
     --use-singularity \
     --singularity-args "--bind /fh:/fh" \
-    --cores=all \
     -p $@
