@@ -6,11 +6,15 @@ echo "Running analysis in $base_folder folder"
 # echo "Pulling singularity container from Github"
 # singularity pull docker://ghcr.io/rasilab/burke_2022:latest
 
-echo "Downloading SRA annotations from GEO"
-cd $base_folder/analysis/barcode_seq/
-sh submit_cluster.sh "--snakefile" download_sra_annotations.smk "--forceall" $@
-echo "Downloading FASTQ annotations from SRA"
-sh submit_cluster.sh "--snakefile" download_fastq.smk $@
+#echo "Downloading SRA annotations from GEO"
+#cd $base_folder/analysis/barcode_seq/
+#sh submit_cluster.sh "--snakefile" download_sra_annotations.smk "--forceall" $@
+#echo "Downloading FASTQ annotations from SRA"
+#sh submit_cluster.sh "--snakefile" download_fastq.smk $@
+
+echo "Run luciferase and circular dichroism scripts"
+cd $base_folder/analysis/
+sh submit_local.sh "--snakefile" run_scripts.smk $@
 
 echo "Running Pool 1 linkage analysis"
 cd $base_folder/analysis/barcode_seq/pool1_linkage/scripts
