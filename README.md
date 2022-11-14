@@ -11,9 +11,6 @@ Public Health Sciences Division, Fred Hutchinson Cancer Center, Seattle
 
 Nature Communications 13, 6829 (2022); doi: https://doi.org/10.1038/s41467-022-34664-0
 
-**Contents**
-
-- [Abstract](#abstract)
 
 ## Abstract
 
