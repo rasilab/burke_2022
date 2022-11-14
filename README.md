@@ -3,13 +3,13 @@
 **Phil Burke**<sup>1,2</sup>, **Heungwon Park**<sup>1</sup>, **Arvind Rasi Subramaniam**<sup>1,†</sup>
 
 <sup>1</sup> Basic Sciences Division and Computational Biology Section of the
-Public Health Sciences Division, Fred Hutchinson Cancer Research Center, Seattle
+Public Health Sciences Division, Fred Hutchinson Cancer Center, Seattle
 <br/>
 <sup>2</sup> Microbiology Graduate Program, University of Washington, Seattle <br/>
 
 <sup>†</sup>Corresponding author: A.R.S: <rasi@fredhutch.org>
 
-bioRxiv 2021.12.01.470782; doi: https://doi.org/10.1101/2021.12.01.470782
+Nature Communications 13, 6829 (2022); doi: https://doi.org/10.1038/s41467-022-34664-0
 
 **Contents**
 
@@ -22,9 +22,10 @@ Yet, coding sequence motifs that predictably alter mRNA stability in human cells
 Here, we develop a massively parallel assay to measure mRNA effects of thousands of synthetic and endogenous coding sequence motifs in human cells. 
 We identify several families of simple dipeptide repeats whose translation triggers mRNA destabilization.
 Rather than individual amino acids, specific combinations of bulky and positively charged amino acids are critical for the destabilizing effects of dipeptide repeats.
-Remarkably, dipeptide sequences that form extended β strands *in silico* and *in vitro* drive ribosome stalling and mRNA instability *in vivo*.
-The resulting nascent peptide code underlies ribosome stalling and mRNA-destabilizing effects of hundreds of endogenous peptide sequences in the human proteome.
+Remarkably, dipeptide sequences that form extended β strands *in silico* and *in vitro* slowdown ribosomes and reduce mRNA levels *in vivo*. 
+The resulting nascent peptide code underlies the mRNA effects of hundreds of endogenous peptide sequences in the human proteome. 
 Our work suggests an intrinsic role for the ribosome as a selectivity filter against the synthesis of bulky and aggregation-prone peptides.
+
 
 ## Software Installation
 
