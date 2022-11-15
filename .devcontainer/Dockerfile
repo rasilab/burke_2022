@@ -68,3 +68,6 @@ RUN mamba install -n R -y -c conda-forge r-rsample
 
 # free font resembling helvetica
 RUN apt update && apt install -y fonts-roboto
+
+# for bootstrapping R functions
+Run mamba install -n R -y -c conda-forge r-boot
