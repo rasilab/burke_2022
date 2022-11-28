@@ -14,5 +14,3 @@ slurm-*
 *.nbconvert.*
 .cache/
 *.html
-*.md
-

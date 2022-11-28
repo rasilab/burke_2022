@@ -1,0 +1,14 @@
+bibliography: bibliography.json
+csl: nature.csl
+link-citations: true
+geometry:
+- margin=0.5in
+linestretch: 1.9
+mainfont: Helvetica
+fontsize: 11pt
+header-includes:
+  - \usepackage[left]{lineno}
+  - \linenumbers
+  - \usepackage[font=footnotesize,labelfont=bf]{caption}
+  - \captionsetup{labelformat=empty}
+linkcolor: blue
