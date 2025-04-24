@@ -1,9 +1,7 @@
 import pandas as pd
 import itertools as it
 
-sra_annotations = pd.read_table("../../annotations/sra_annotations.tsv")
-
-container: "../../burke_2022_latest.sif"
+sra_annotations = pd.read_table("../../annotations/sra_annotations.tsv")[-4:]
 
 rule all:
   input:
@@ -16,8 +14,8 @@ rule get_fastq:
   output: '../../data/fastq/{srr}.fastq'
   params:
     directory = '../../data/fastq/'
-  conda: "sratools"
   threads : 36
+  container: 'docker://ghcr.io/rasilab/sratools:3.0.8'
   shell:
     """
     set +e # continue if there is an error code

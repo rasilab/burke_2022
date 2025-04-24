@@ -50,7 +50,7 @@ rule generate_reference_for_alignment:
     '../annotations/insert_annotations/{sample_name}.tsv'
   log:
     '../data/bowtie2_reference/{sample_name}_reference_creation.log'
-  conda: "R"
+  container: "docker://ghcr.io/rasilab/r:1.0.0"
   shell:
     """
     mkdir -p ../annotation/insert_annotations
@@ -65,6 +65,7 @@ rule fastq_rename:
   output: '../data/fastq/{sample_name}.fastq'
   log:
     '../data/fastq/{sample_name}.log'
+  container: "docker://ghcr.io/rasilab/python:1.0.0"
   shell:
     """
     sed 's/SRR[[:digit:]]\+.\([[:digit:]]\+\).*/\\1/g' {input.fastq} > {output}
@@ -80,7 +81,7 @@ rule generate_bowtie_reference:
     '../data/bowtie2_reference/{sample_name}.1.bt2'
   log:
     '../data/bowtie2_reference/{sample_name}.bowtie2build.log'
-  conda: "bowtie2_samtools"
+  container: "docker://ghcr.io/rasilab/bowtie2:2.4.5"
   shell:
     'bowtie2-build {input} ../data/bowtie2_reference/{wildcards.sample_name} &> {log}'
 
@@ -97,7 +98,7 @@ rule align:
     trim5 = lambda wildcards: sample_annotations.loc[sample_annotations['sample_name'] == wildcards.sample_name, 'trim5'].item(),
     trim3 = lambda wildcards: sample_annotations.loc[sample_annotations['sample_name'] == wildcards.sample_name, 'trim3'].item(),
     reference = '../data/bowtie2_reference/{sample_name}'
-  conda: "bowtie2_samtools"
+  container: "docker://ghcr.io/rasilab/bowtie2:2.4.5"
   shell:
     """
     bowtie2 \
@@ -129,7 +130,7 @@ rule sort_and_index_bam:
   threads: 36
   log:
     '../data/alignments/{sample_name}.samtools.log'
-  conda: "bowtie2_samtools"
+  container: "docker://ghcr.io/rasilab/bowtie2:2.4.5"
   shell:
     """
     # convert to BAM
@@ -151,7 +152,7 @@ rule filter_alignments:
     tsv = '../data/filtered_alignments/{sample_name}.tsv.gz',
   log:
     '../data/filtered_alignments/{sample_name}.log',
-  conda: "R"
+  container: "docker://ghcr.io/rasilab/r:1.0.0"
   shell:
     'Rscript {input.Rscript} {input.bam} {output.tsv}'
 
@@ -170,6 +171,7 @@ rule count_insert_barcode_pairs:
     barcode1_length = lambda wildcards: sample_annotations.loc[sample_annotations['sample_name'] == wildcards.sample_name, 'barcode1_length'].item(),
   log:
     '../data/insert_barcode_counts/{sample_name}.log',
+  container: "docker://ghcr.io/rasilab/python:1.0.0"
   shell:
     """
     python count_barcode_insert_pairs.py {input.fastq} {input.filtered_alignments} {output.tsv} \
@@ -193,7 +195,7 @@ rule align_barcodes_1_against_themselves:
   params:
     bowtie_index = '../data/ref_vs_ref_alignments/{sample_name}/reference_barcode1'
   threads: 36
-  conda: "bowtie2_samtools"
+  container: "docker://ghcr.io/rasilab/bowtie2:2.4.5"
   shell:
     """
     # write the input file to a fasta file of barcodes with name as barcode_num col from input_file
@@ -223,6 +225,6 @@ rule filter_barcodes:
     Rscript = 'filter_barcodes.R',
   output:
     '../data/filtered_barcodes/{sample_name}.tsv.gz',
-  conda: "R"
+  container: "docker://ghcr.io/rasilab/r:1.0.0"
   shell:
     'Rscript {input.Rscript} {input.bam1} {input.counts} {output}'
